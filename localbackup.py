@@ -9,6 +9,7 @@ import os
 import shutil
 import argparse
 import logging
+import logging.handlers
 import datetime
 from datetime import date
 from sh import rsync
@@ -44,6 +45,9 @@ if logfile:
     fileHandler = logging.FileHandler(logfile)
     fileHandler.setFormatter(logFormatter)
     rootLogger.addHandler(fileHandler)
+else:
+    defaultHandler = logging.handlers.SysLogHandler(address = '/dev/log')
+    rootLogger.addHandler(defaultHandler)
 
 if not args.quiet:
     consoleHandler = logging.StreamHandler()
