@@ -1,4 +1,9 @@
 #!/usr/bin/env python
+# Author : Sebastian Gumprich http://zufallsheld.de
+# Modifier : Ketan Patel http://k2patel.in
+# License : BSD
+# Usage : python localbackup.py -h
+####
 
 import os
 import shutil
