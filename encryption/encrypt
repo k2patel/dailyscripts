@@ -1,0 +1,13 @@
+#!/bin/bash
+
+if [ $# -lt 1 ];then
+	echo "Usage : $0 <fileinput> <fileoutput>" && exit
+fi
+
+openssl=$(which openssl)
+
+if ${openssl} des3 -salt -in ${1} -out ${2}; then
+	echo "Successfully converted"
+else
+	echo "Failed Conversion"
+fi

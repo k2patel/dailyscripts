@@ -1,0 +1,7 @@
+#!/bin/bash
+USERID=`whoami`
+IFACE=$(sudo tunctl -b -u $USERID)
+
+qemu-kvm -net nic -net tap,ifname="$IFACE" $*
+ 
+sudo tunctl -d $IFACE &> /dev/null

@@ -1,0 +1,37 @@
+#!/bin/bash
+
+if [ $# -lt 1 ]; then
+	echo "Usage : $0 <filename>" && exit 1
+fi
+
+tfilen="$(/home/k2patel/bin/apg 1 20)"
+
+if /home/k2patel/bin/decrypt $1 ${tfilen}
+then
+	echo "Starting Vi...."
+	wait 1
+	if vi $tfilen; then
+		echo "Successfully Written...."
+		if /home/k2patel/bin/encrypt ${tfilen} ${1}; then
+			echo "File encrytepd Successfully"
+			if rm -rf ${tfilen}; then
+             	       		echo "Removing ${tfilen} Failed"
+            			echo "Please remove it Manually"
+                	fi
+			exit 1
+		else
+			echo "File encryption Failed"
+			exit 1
+		fi
+
+	else
+		echo "Failed Wrinting"
+		if rm -rf ${tfilen} ; then
+			echo "Removing ${tfilen} Failed"
+			echo "Please remove it Manually"
+		fi
+		exit 1
+	fi
+else
+	echo "Failed Decription"
+fi

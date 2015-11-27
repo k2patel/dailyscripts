@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+source /etc/bash.bashrc
+
+folders=('/home/k2patel/Pictures' '/home/k2patel/Picture')
+for i in ${folders[@]}
+do
+if [ -d /home/drive2/Backup/${i} ]
+then
+	rsync -avgop ${i}/. /home/drive2/Backup/${i}/.
+else
+	mkdir -p /home/drive2/Backup/${i}
+	rsync -avgop ${i}/. /home/drive2/Backup/${i}/.
+fi
+done

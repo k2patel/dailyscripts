@@ -1,0 +1,16 @@
+#!/bin/bash
+if [ $# -gt 2 ]; then
+echo "Usage : $0 [<Number Of Password>] [<Lenght Of Password>]"
+else
+if [ $1 ]; then
+        itr=$1
+else
+	itr='10'
+fi
+if [ $2 ]; then
+	len=$2
+else
+        len='15'
+fi
+for ((n=0;n<$itr;n++)); do dd if=/dev/urandom count=1 2> /dev/null | /usr/bin/uuencode -m -| sed -ne 2p | cut -c-$len; done
+fi

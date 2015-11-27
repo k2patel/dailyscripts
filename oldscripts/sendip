@@ -1,0 +1,41 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+Spyder Editor
+
+This temporary script file is located here:
+/home/k2patel/bin/sendip
+"""
+
+import urllib2
+import smtplib
+
+
+# CUSTOMIZATION START
+
+# Define your current IP here.
+currentIP = "69.126.143.155"
+# Define you email id to notify
+toaddrs = "k2patel@gmail.com"
+# Define Source Email ID
+fromaddr = "k2patel@k2patel.in"
+
+
+# CUSTOMIZATION END
+
+url = 'http://icanhazip.com'
+req = urllib2.Request(url)
+res = urllib2.urlopen(req)
+newIP = res.read()
+
+#print newIP.rstrip()
+#print currentIP.rstrip()
+
+if currentIP.rstrip() == newIP.rstrip():
+    print("All OK")
+else:
+    msg = str("your new IP is " + newIP.rstrip())
+    server = smtplib.SMTP('localhost')
+    server.set_debuglevel(1)
+    server.sendmail(fromaddr, toaddrs, msg)
+    server.quit()

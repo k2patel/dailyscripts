@@ -1,0 +1,20 @@
+#!/bin/bash
+
+if [ $# -lt 1 ]; then
+	echo "Usage : $0 <filename>" && exit 1
+fi
+
+tfilen="$(/home/k2patel/bin/apg 1 20)"
+
+if /home/k2patel/bin/decrypt $1 $tfilen
+then
+	cat $tfilen
+	if rm -rf $tfilen; then
+		echo "Removed Successfully"
+	else
+		echo "Removing $tfilen Failed"
+            	echo "Please remove it Manually"
+	fi
+else
+	echo "Failed Decription"
+fi
