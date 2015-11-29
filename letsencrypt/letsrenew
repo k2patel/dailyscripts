@@ -12,7 +12,7 @@ source /etc/bash.bashrc
 # Globals ( Please update )
 #
 ldomains=('rpm.k2patel.in' 'live.k2patel.in' 'vedi.k2patel.in')
-LETSENCRYPT_HOME="/root/letsecrypt"
+LETSENCRYPT_HOME="/root/letsencrypt"
 WEBSERVER="nginx"
 
 # Enable System level logging
