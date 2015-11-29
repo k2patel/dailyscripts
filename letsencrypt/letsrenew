@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+#
+#############
+#
+# Renew Certificate using lets-encrypt
+# Author : Ketan Patel <k2patel.in>
+# License : BSD
+#
+#############
+source /etc/bash.bashrc
+
+# Globals ( Please update )
+#
+ldomains=('test.k2patel.in' 'woot.k2patel.in' 'ip.k2patel.in')
+LETSENCRYPT_HOME="/root/letsecrypt"
+
+
+for i in ${ldomains[@]}
+do
+${LETSENCRYPT_HOME}/letsencrypt-auto --renew --agree-dev-preview --server https://acme-v01.api.letsencrypt.org/directory certonly -d ${i}
+done
