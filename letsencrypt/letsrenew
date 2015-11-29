@@ -11,11 +11,29 @@ source /etc/bash.bashrc
 
 # Globals ( Please update )
 #
-ldomains=('test.k2patel.in' 'woot.k2patel.in' 'ip.k2patel.in')
+ldomains=('rpm.k2patel.in' 'live.k2patel.in' 'vedi.k2patel.in')
 LETSENCRYPT_HOME="/root/letsecrypt"
+WEBSERVER="nginx"
 
+# Enable System level logging
+# Redirect log to logger
+exec 1> >(logger -t $(basename $0)) 2>&1
 
-for i in ${ldomains[@]}
-do
-${LETSENCRYPT_HOME}/letsencrypt-auto --renew --agree-dev-preview --server https://acme-v01.api.letsencrypt.org/directory certonly -d ${i}
-done
+# Stop webservice and renew certificate since letsencrypt require to authorize request
+if /usr/bin/systemctl stop ${WEBSERVER} ; then
+
+   for i in ${ldomains[@]}
+    do
+       ${LETSENCRYPT_HOME}/letsencrypt-auto --renew --agree-dev-preview --server https://acme-v01.api.letsencrypt.org/directory certonly -d ${i}
+       echo "INFO: Updatd ${i} Certificate"
+    done
+else
+    echo "CRIT : Failed to stop nginx, can not renew certificate"
+fi
+
+# Start web services
+if /usr/bin/systemctl start ${WEBSERVER} ; then
+   echo "INFO : Web service started after certificate renewal."
+else
+   echo "CRIT : Failed to start web services"
+fi
