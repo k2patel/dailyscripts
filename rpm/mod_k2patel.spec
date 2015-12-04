@@ -34,10 +34,10 @@ rm -rf $RPM_BUILD_ROOT
 %config(noreplace) %{_sysconfdir}/httpd/conf.d/mod_k2patel.conf
 
 %post
-/usr/sbin/apxs -e -A -n rpaf $(apxs -q LIBEXECDIR)/mod_k2patel.so
+/usr/sbin/apxs -e -A -n k2patel_module $(apxs -q LIBEXECDIR)/mod_k2patel.so
 
 %preun
-/usr/sbin/apxs -e -A -n rpaf $(apxs -q LIBEXECDIR)/mod_k2patel.so
+/usr/sbin/apxs -e -A -n k2patel_module $(apxs -q LIBEXECDIR)/mod_k2patel.so
 
 
 %changelog
