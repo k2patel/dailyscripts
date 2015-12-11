@@ -57,6 +57,7 @@ if not args.quiet:
 
 # directory exist-check
 def check_dir_exist(os_dir):
+    """ This Function check if directory exists or not. """
     if not os.path.exists(os_dir):
         logging.error("{} does not exist.".format(os_dir))
         exit(1)
@@ -65,6 +66,7 @@ check_dir_exist(backupdir)
 
 # delete function
 def delete_files(directory):
+    """ This function delete files if required to maintain retention. """
     try:
         print "removing the " + directory
         shutil.rmtree(directory)
@@ -75,6 +77,7 @@ def delete_files(directory):
 
 # list all folder in backup
 def listdirs(folder):
+    """ This function list the all folder in backup folder. """
     return [d for d in os.listdir(folder) if os.path.isdir(os.path.join(folder, d))]
 
 # Check if existing folder is older than retention period
