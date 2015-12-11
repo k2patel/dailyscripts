@@ -73,7 +73,6 @@ def delete_files(directory):
         logging.info("Deleting " + directory)
     except OSError:
         logging.warning("Could not delete " + dirctory)
-        pass
 
 # list all folder in backup
 def listdirs(folder):
