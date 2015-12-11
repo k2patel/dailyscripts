@@ -26,33 +26,33 @@ parser.add_argument("-e", "--exclude", help="Exlude the following directories fr
 parser.add_argument("-l", "--logfile", help="Specify the logfile to monitor.")
 parser.add_argument("-q", "--quiet", help="Do not print to stdout.", action="store_true")
 
-timeStamp =  date.today()
+time_stamp =  date.today()
 
 args = parser.parse_args()
 
 # Define variables
 backupdir = args.BACKUPDIR
 destinationroot = args.DESTINATIONDIR
-destinationdir = destinationroot + '/' + str(timeStamp)
+destinationdir = destinationroot + '/' + str(time_stamp)
 logfile = args.logfile
 retention = args.retention
 
 #Logging
-rootLogger = logging.getLogger()
-logFormatter = logging.Formatter("%(asctime)s - %(message)s")
-rootLogger.setLevel(logging.INFO)
+root_logger = logging.getLogger()
+log_formatter = logging.Formatter("%(asctime)s - %(message)s")
+root_logger.setLevel(logging.INFO)
 if logfile:
-    fileHandler = logging.FileHandler(logfile)
-    fileHandler.setFormatter(logFormatter)
-    rootLogger.addHandler(fileHandler)
+    file_handler = logging.FileHandler(logfile)
+    file_handler.setFormatter(log_formatter)
+    root_logger.addHandler(file_handler)
 else:
-    defaultHandler = logging.handlers.SysLogHandler(address = '/dev/log')
-    rootLogger.addHandler(defaultHandler)
+    default_handler = logging.handlers.SysLogHandler(address = '/dev/log')
+    root_logger.addHandler(default_handler)
 
 if not args.quiet:
-    consoleHandler = logging.StreamHandler()
-    consoleHandler.setFormatter(logFormatter)
-    rootLogger.addHandler(consoleHandler)
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(log_formatter)
+    root_logger.addHandler(console_handler)
 
 
 # directory exist-check
@@ -80,10 +80,10 @@ def listdirs(folder):
 # Check if existing folder is older than retention period
 if args.retention:
     for k2 in listdirs(destinationroot):
-        if ((timeStamp-datetime.datetime.strptime(k2, '%Y-%m-%d').date()).days >= retention):
-            remDirectory = destinationroot + '/' + k2
-            print remDirectory
-            delete_files(remDirectory)
+        if ((time_stamp-datetime.datetime.strptime(k2, '%Y-%m-%d').date()).days >= retention):
+            rem_directory = destinationroot + '/' + k2
+            print rem_directory
+            delete_files(rem_directory)
 
 # handle exclusions
 exclusions = []
