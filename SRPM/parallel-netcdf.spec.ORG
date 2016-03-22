@@ -1,0 +1,214 @@
+#
+# spec file for package parallel-netcdf
+#
+# Copyright (c) 2012 SUSE LINUX Products GmbH, Nuernberg, Germany.
+#
+# All modifications and additions to the file contributed by third parties
+# remain the property of their copyright owners, unless otherwise agreed
+# upon. The license for this file, and modifications and additions to the
+# file, is the same license as for the pristine package itself (unless the
+# license for the pristine package is not an Open Source License, in which
+# case the license is the MIT License). An "Open Source License" is a
+# license that conforms to the Open Source Definition (Version 1.9)
+# published by the Open Source Initiative.
+
+# Please submit bugfixes or comments via http://bugs.opensuse.org/
+#
+
+
+Name:           parallel-netcdf
+Version:        1.3.0
+Release:        3.1
+Summary:        A library providing high-performance I/O with Unidata's NetCDF
+License:        GPL-2.0
+Group:          Development/Libraries/Parallel
+Url:            http://trac.mcs.anl.gov/projects/parallel-netcdf/
+Source0:        %{name}-%{version}.tar.bz2
+Patch0:         parallel-netcdf-1.3.0-destdir.patch
+BuildRequires:  bison
+BuildRequires:  flex
+BuildRequires:  gcc-c++
+BuildRequires:  gcc-fortran
+BuildRequires:  openmpi-devel
+%if 0%{?sles_version}
+BuildRequires:  mvapich2-devel
+%endif
+BuildRoot:      %{_tmppath}/%{name}-%{version}-build
+
+%if 0%{?sles_version}
+%define _mpi openmpi mvapich2
+%else
+%define _mpi openmpi
+%endif
+
+%description
+Parallel netCDF (PnetCDF) is a library providing high-performance I/O while
+still maintaining file-format compatibility with Unidata's NetCDF.
+
+
+%package openmpi
+Summary:        A Toolkit for Advanced Optimization
+Group:          Development/Libraries/Parallel
+
+%description openmpi
+Parallel netCDF (PnetCDF) is a library providing high-performance I/O while
+still maintaining file-format compatibility with Unidata's NetCDF.
+
+
+%package -n libpnetcdf1-openmpi
+Summary:        A Toolkit for Advanced Optimization
+Group:          System/Libraries
+
+%description -n libpnetcdf1-openmpi
+Parallel netCDF (PnetCDF) is a library providing high-performance I/O while
+still maintaining file-format compatibility with Unidata's NetCDF.
+
+%package openmpi-devel
+Summary:        Development and header files for %{name}
+Group:          Development/Libraries/Parallel
+Requires:       openmpi-devel
+Requires:       libpnetcdf1-openmpi = %{version}
+
+%description openmpi-devel
+This package contains the development and header files for %{name}.
+
+
+%if 0%{?sles_version}
+%package mvapich2
+Summary:        A Toolkit for Advanced Optimization
+Group:          Development/Libraries/Parallel
+
+%description mvapich2
+Parallel netCDF (PnetCDF) is a library providing high-performance I/O while
+still maintaining file-format compatibility with Unidata's NetCDF.
+
+
+%package -n libpnetcdf1-mvapich2
+Summary:        A Toolkit for Advanced Optimization
+Group:          System/Libraries
+
+%description -n libpnetcdf1-mvapich2
+Parallel netCDF (PnetCDF) is a library providing high-performance I/O while
+still maintaining file-format compatibility with Unidata's NetCDF.
+
+%package mvapich2-devel
+Summary:        Development and header files for %{name}
+Group:          Development/Libraries/Parallel
+Requires:       mvapich2-devel
+Requires:       libpnetcdf1-mvapich2 = %{version}
+
+%description mvapich2-devel
+This package contains the development and header files for %{name}.
+%endif
+
+%prep
+%setup -q -n %{name}-%{version}
+%patch0 -p1
+
+set -- *
+for mpi in %_mpi; do
+ mkdir $mpi
+ cp -ap "$@" $mpi
+done
+
+%build
+for mpi in %_mpi; do
+cd $mpi
+%configure --prefix=%{_libdir}/mpi/gcc/$mpi \
+           --libdir=%{_libdir}/mpi/gcc/$mpi/%_lib \
+           --with-mpi=%{_libdir}/mpi/gcc/$mpi
+make
+
+mkdir shared
+cd shared
+%{_libdir}/mpi/gcc/$mpi/bin/mpif77 -shared -Wl,-soname=libpnetcdf.so.1 -o ../libpnetcdf.so.%{version}
+cd ..
+
+cd ..
+done
+
+%install
+for mpi in %_mpi; do
+cd $mpi
+%makeinstall
+
+%ifarch x86_64
+mv %{buildroot}%{_libdir}/mpi/gcc/$mpi/lib %{buildroot}%{_libdir}/mpi/gcc/$mpi/%_lib
+%endif
+
+install -m 755 libpnetcdf.so.%{version} %{buildroot}%{_libdir}/mpi/gcc/$mpi/%_lib
+pushd %{buildroot}%{_libdir}/mpi/gcc/$mpi/%_lib
+ln -s libpnetcdf.so.%{version} libpnetcdf.so.1
+ln -s libpnetcdf.so.%{version} libpnetcdf.so
+popd
+
+find %{buildroot} -name '*.la' -exec rm {} \;
+cd ..
+done
+
+%clean
+rm -rf %{buildroot}
+
+%post -n libpnetcdf1-openmpi -p /sbin/ldconfig
+
+%postun -n libpnetcdf1-openmpi -p /sbin/ldconfig
+
+%if 0%{?sles_version}
+%post -n libpnetcdf1-mvapich2 -p /sbin/ldconfig
+
+%postun -n libpnetcdf1-mvapich2 -p /sbin/ldconfig
+%endif
+
+%files openmpi
+%defattr(-,root,root,-)
+%dir %{_libdir}/mpi/gcc/openmpi/man
+%dir %{_libdir}/mpi/gcc/openmpi/man/man1
+%dir %{_libdir}/mpi/gcc/openmpi/man/man3
+%{_libdir}/mpi/gcc/openmpi/bin/*
+%{_libdir}/mpi/gcc/openmpi/man/man1/*
+%{_libdir}/mpi/gcc/openmpi/man/man3/*
+
+%files -n libpnetcdf1-openmpi
+%defattr(-,root,root,-)
+%{_libdir}/mpi/gcc/openmpi/%_lib/*.so.*
+
+%files openmpi-devel
+%defattr(-,root,root,-)
+%{_libdir}/mpi/gcc/openmpi/include/*
+%{_libdir}/mpi/gcc/openmpi/%_lib/*.so
+%{_libdir}/mpi/gcc/openmpi/%_lib/*.a
+
+%if 0%{?sles_version}
+%files mvapich2
+%defattr(-,root,root,-)
+%dir %{_libdir}/mpi/gcc/mvapich2/man
+%dir %{_libdir}/mpi/gcc/mvapich2/man/man1
+%dir %{_libdir}/mpi/gcc/mvapich2/man/man3
+%{_libdir}/mpi/gcc/mvapich2/bin/*
+%{_libdir}/mpi/gcc/mvapich2/man/man1/*
+%{_libdir}/mpi/gcc/mvapich2/man/man3/*
+
+%files -n libpnetcdf1-mvapich2
+%defattr(-,root,root,-)
+%{_libdir}/mpi/gcc/mvapich2/%_lib/*.so.*
+
+%files mvapich2-devel
+%defattr(-,root,root,-)
+%{_libdir}/mpi/gcc/mvapich2/include/*
+%{_libdir}/mpi/gcc/mvapich2/%_lib/*.so
+%{_libdir}/mpi/gcc/mvapich2/%_lib/*.a
+%endif
+
+%changelog
+* Sun Aug 26 2012 scorot@free.fr
+- fix shared library file name
+* Sun Aug 26 2012 scorot@free.fr
+- fix broken requirement of devel packages
+* Mon Aug 20 2012 scorot@free.fr
+- again fix wrong Group flag
+* Mon Aug 20 2012 scorot@free.fr
+- fix wrong Group flag
+* Fri Aug 10 2012 scorot@free.fr
+- fix libdir name after %%%%makeinstall for x86_64 arch
+* Thu Aug  9 2012 scorot@free.fr
+- first package
