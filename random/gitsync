@@ -1,0 +1,44 @@
+#!/usr/bin/env python
+#
+# Syncronize puppet code folder with the git repository.
+#
+
+import os
+import subprocess
+import sys
+import socket
+from logging import DEBUG, ERROR
+
+from whichcraft import which
+from packaging.version import Version, LegacyVersion
+
+#Get the puppet location
+p_location = which('puppet')
+g_location = which('git')
+
+# Check if file exists and version number of puppet
+if os.path.exists(p_location):
+   p_version = subprocess.check_output([p_location, "-V"], shell=False).rstrip('\n')
+else:
+   sys.exit("Puppet is not installed")
+
+# Define the where to daacpull
+if Version(p_version) < Version('4'):
+        repo_path = '/etc/puppet'
+elif Version(p_version) > Version('4'):
+        repo_path = '/etc/puppetlabs/code'
+else:   
+        sys.exit("This script is not compatible")
+
+# Define the Branch to follow
+p_branch = socket.getfqdn().split('.')[0].split('-')[-1]
+
+if p_branch != 'dev':
+        p_branch = 'master'
+
+# Working on Git Repository.
+subprocess.check_call([g_location, "stash"], shell=False, cwd=repo_path)
+subprocess.check_call([g_location, "submodule", "foreach", "git", "reset", "--hard"], shell=False, cwd=repo_path)
+subprocess.check_call([g_location, "submodule", "sync"], shell=False, cwd=repo_path)
+subprocess.check_call([g_location, "pull", "origin", p_branch], shell=False, cwd=repo_path)
+subprocess.check_call([g_location, "submodule", "update", "--init"], shell=False, cwd=repo_path)
