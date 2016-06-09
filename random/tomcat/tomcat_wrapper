@@ -18,17 +18,18 @@ parser = argparse.ArgumentParser(
 
 parser.add_argument("-a", "--action", help="Action to take 'reload', 'stop', 'start'", type=str, default=reload)
 parser.add_argument("-c", "--context", help="Enter name of webapp, where you want to send action", type=str, required=True )
+parser.add_argument("-b", "--block", help="Configuration Block to get config", type=str, required=True )
 
 args = parser.parse_args()
 
 config = ConfigParser.ConfigParser()
 config.readfp(open(r'tomcat_wrapper.conf'))
 
-username = config.get('access', 'username')
-password = base64.b64decode(config.get('access', 'password'))
-_host = config.get('access', 'host')
-_port = config.get('access', 'port')
-_manager = config.get('access', 'manager')
+username = config.get(args.block, 'username')
+password = base64.b64decode(config.get(args.block, 'password'))
+_host = config.get(args.block, 'host')
+_port = config.get(args.block, 'port')
+_manager = config.get(args.block, 'manager')
 
 URL = 'http://' + _host + ':' + _port + _manager + '/text/' + args.action + '?path=/' + args.context
 
