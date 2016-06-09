@@ -1,4 +1,9 @@
 #! /usr/bin/env python
+# Author : Ketan Patel http://k2patel.in
+# 
+# License : BSD
+# Usage : python tomcat_wrapper
+####
 
 import sys
 import requests

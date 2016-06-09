@@ -2,6 +2,13 @@
 # Find your age based on no. of sloka in Bhagvad Gita.
 # Total no. of sloka (115)
 # This mechanism true till you are at age of 115
+#
+# Author : Ketan Patel http://k2patel.in
+# 
+# License : BSD
+# Usage : python find_age.py
+####
+
 import sys
 import argparse
 
