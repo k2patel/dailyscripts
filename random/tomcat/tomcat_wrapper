@@ -25,11 +25,19 @@ args = parser.parse_args()
 config = ConfigParser.ConfigParser()
 config.readfp(open(r'tomcat_wrapper.conf'))
 
-username = config.get(args.block, 'username')
-password = base64.b64decode(config.get(args.block, 'password'))
+def get_config_value(get_cl_variable):
+	if config.has_option(args.block , get_cl_variable):
+		rt_variable = config.get(args.block , get_cl_variable)
+	else:
+		rt_variable = config.get('global', get_cl_variable)
+	return rt_variable
+
+username = get_config_value('username')
+password = base64.b64decode(get_config_value('password'))
 _host = config.get(args.block, 'host')
-_port = config.get(args.block, 'port')
-_manager = config.get(args.block, 'manager')
+_port = get_config_value('port')
+_manager = get_config_value('manager')
+
 
 URL = 'http://' + _host + ':' + _port + _manager + '/text/' + args.action + '?path=/' + args.context
 
