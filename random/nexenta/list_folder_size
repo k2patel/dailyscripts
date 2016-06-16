@@ -1,0 +1,34 @@
+#!/usr/bin/env python
+# Author : Ketan Patel http://k2patel.in
+# 
+# License : BSD
+# Usage : python <script_name>
+####
+
+import urllib2 as u
+import json
+import ssl
+
+ctx = ssl.create_default_context()
+ctx.check_hostname = False
+ctx.verify_mode = ssl.CERT_NONE
+url = 'https://nexenta1.ornl.gov:2000/rest/nms'
+headers = {
+'Content-Type': 'application/json',
+'Authorization': 'Basic %s' %
+'admin:xxxxxxx'.encode('base64')[:-1]
+}
+data = json.dumps({'object': 'folder', 'method': 'get_names', 'params': [""]})
+
+r = u.Request(url, data, headers)
+resp = u.urlopen(r, context=ctx)
+
+j_obj = json.load(resp)
+
+for element in j_obj['result']:
+   data = json.dumps({'object': 'folder', 'method': 'get_child_props', 'params': [element, 'used']})
+   r = u.Request(url, data, headers)
+   resp = u.urlopen(r, context=ctx)
+   t_obj = json.load(resp)
+   print element + ' : \n ' + '\tdataset: ' + t_obj['result']['usedbydataset'] + '\n' + '\tsnapshot: ' + t_obj['result']['usedbysnapshots'] + '\n' + '\tUsed: ' + t_obj['result']['used']  
+
