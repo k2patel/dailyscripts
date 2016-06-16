@@ -12,7 +12,7 @@ import ssl
 ctx = ssl.create_default_context()
 ctx.check_hostname = False
 ctx.verify_mode = ssl.CERT_NONE
-url = 'https://nexenta1.ornl.gov:2000/rest/nms'
+url = 'https://nexenta1.test.com:2000/rest/nms'
 headers = {
 'Content-Type': 'application/json',
 'Authorization': 'Basic %s' %
