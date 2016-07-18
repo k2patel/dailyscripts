@@ -6,3 +6,7 @@ it's simple and uses base64 password to store in your configuration.
 
 - main script "tomcat_wrapper"
 - config "tomcat_wrapper.conf"
+
+example use :
+
+`/usr/local/sbin/tomcat_wrapper -u ${user} -p ${password} -H ${host} -P ${port} -m ${manager} -c ${context} -a ${action} -s ${ssl}`
