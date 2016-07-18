@@ -16,14 +16,23 @@ import ConfigParser
 parser = argparse.ArgumentParser(
     description=__doc__)
 
-parser.add_argument("-a", "--action", help="Action to take 'reload', 'stop', 'start'", type=str, default=reload)
+parser.add_argument("-a", "--action", help="Action to take 'reload', 'stop', 'start'", type=str, default='reload')
 parser.add_argument("-c", "--context", help="Enter name of webapp, where you want to send action", type=str, required=True )
-parser.add_argument("-b", "--block", help="Configuration Block to get config", type=str, required=True )
+parser.add_argument("-b", "--block", help="Configuration Block to get config if not defined default to 'default'", type=str, default='default' )
+parser.add_argument("-H", "--host", help="If it's localhost do not read configuration from file", type=str, default='localhost' )
+parser.add_argument("-u", "--user", help="define username default to admin", type=str, default='admin')
+parser.add_argument("-p", "--password", help="If password is not defined and it's localhost it will fail", type=str)
+parser.add_argument("-P", "--port", help="Specify which port to connect to", type=int, default=8080)
+parser.add_argument("-m", "--manager", help="specify where manager is located", type=str, default='/manager')
+parser.add_argument("-f", "--file", help="specify if you want script to read configuration from file", type=str, default=False )
+parser.add_argument("-s", "--ssl", help="Specify if SSL required to be used, you can use either 1 or 0", type=str, default='1')
 
 args = parser.parse_args()
 
-config = ConfigParser.ConfigParser()
-config.readfp(open(r'tomcat_wrapper.conf'))
+if args.file is not False :
+	config = ConfigParser.ConfigParser()
+	config.readfp(open(r'/etc/tomcat_wrapper.conf'))
+
 
 def get_config_value(get_cl_variable):
 	if config.has_option(args.block , get_cl_variable):
@@ -32,14 +41,27 @@ def get_config_value(get_cl_variable):
 		rt_variable = config.get('global', get_cl_variable)
 	return rt_variable
 
-username = get_config_value('username')
-password = base64.b64decode(get_config_value('password'))
-_host = config.get(args.block, 'host')
-_port = get_config_value('port')
-_manager = get_config_value('manager')
+if args.host and args.file is False:
+	if args.password=="" :
+		print "Password not supplied"
+		sys.exit(1)
+	else:
+		username = args.user
+		password = args.password
+		_host = args.host
+		_port = args.port
+		_manager = args.manager
+else:     
+	username = get_config_value('username')
+	password = base64.b64decode(get_config_value('password'))
+	_host = config.get(args.block, 'host')
+	_port = get_config_value('port')
+	_manager = get_config_value('manager')
 
-
-URL = 'http://' + _host + ':' + _port + _manager + '/text/' + args.action + '?path=/' + args.context
+if args.ssl is '1':
+	URL = 'https://' + _host + ':' + str(_port) + _manager + '/text/' + args.action + '?path=/' + args.context
+else:
+	URL = 'http://' + _host + ':' + str(_port) + _manager + '/text/' + args.action + '?path=/' + args.context
 
 resp = requests.get(URL, auth=HTTPBasicAuth(username, password))
 
