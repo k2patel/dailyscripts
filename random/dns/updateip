@@ -1,0 +1,57 @@
+#!/usr/bin/env python3
+
+import requests
+import socket
+import json
+
+cloudflare_api_key = <your_api_key>
+cloudflare_zone = <your_zone_id>
+domain_id = <domain_id>
+user_name = <User_name>
+g_zone = <domain_name> # e.g. 'k2patel.in'
+domain_name = <Record_need_to_update> # e.g. wiki.k2patel.in
+
+myip = requests.get('https://ipv4.icanhazip.com')
+oldip = socket.gethostbyname(domain_name)
+
+headers = {
+ 'X-Auth-Email': user_name,
+ 'X-Auth-Key': cloudflare_api_key,
+ 'Content-Type': 'application/json',
+}
+
+def update_ip(new_ip, c_zone, d_id, dns_name, main_zone):
+   d_post = {
+      'type': 'A',
+      'name': dns_name,
+      'content': new_ip,
+      'zone_id': c_zone,
+      'zone_name': main_zone,
+      'data':{}
+   }
+   j_data = json.dumps(d_post)
+   #print(j_data)
+   n_uri = 'https://api.cloudflare.com/client/v4/zones/' + c_zone + '/dns_records/' + d_id
+   #print(n_uri)
+   r = requests.put(n_uri, headers=headers, data=j_data)
+   #print(headers)
+   j_return = json.loads(r.text)
+   #print(j_return)
+   if j_return['success'] is True :
+       print('Updated : ' + dns_name)
+   else:
+       print(j_return['errors'])
+
+if oldip == myip.text.strip():
+    print('ip is same')
+else:
+    #print('New IP : ' + myip.text.strip())
+    #print('Old IP : ' + oldip)
+    update_ip(myip.text.strip(), cloudflare_zone, domain_id, domain_name, g_zone)
+
+
+## How to get cloudflare zone
+#curl -X GET "https://api.cloudflare.com/client/v4/zones?name=example.com&status=active&page=1&per_page=20&order=status&direction=desc&match=all" -H "X-Auth-Email: user@example.com" -H "X-Auth-Key: c2547eb745079dac9320b638f5e225cf483cc5cfdda41" -H "Content-Type: application/json"
+
+## How to get domain id
+#curl -X GET "https://api.cloudflare.com/client/v4/zones/023e105f4ecef8ad9ca31a8372d0c353/dns_records?type=A&name=example.com&content=127.0.0.1&page=1&per_page=20&order=type&direction=desc&match=all" -H "X-Auth-Email: user@example.com" -H "X-Auth-Key: c2547eb745079dac9320b638f5e225cf483cc5cfdda41" -H "Content-Type: application/json"
