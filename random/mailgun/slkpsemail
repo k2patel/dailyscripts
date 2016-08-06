@@ -1,0 +1,46 @@
+#!/usr/bin/env python3
+import csv
+import requests
+
+#####
+### Please make sure your csv file match following pattern
+### email,First,Last,State
+#####
+
+###
+# Define state which you want to send message to
+###
+states = {'TN', 'TENNESSEE', 'GA', 'KY', 'KENTUCKY'}
+
+###
+# Modify full path to your csv file
+# List must match following format in CSV
+# Email,First,Last,State
+###
+listfile = '/home/k2patel/Downloads/tst'
+
+###
+# Location for the message file
+###
+msgfile = '/home/k2patel/Documents/template/message.html'
+
+
+########## Please do not modify further ############
+
+def send_mime_message(email):
+   return requests.post(
+      "https://api.mailgun.net/v3/slkps.com/messages",
+      auth=("api", "<api_key>"),
+      data={"from": "<email>",
+            "to": email,
+            "subject" : "<subject>",
+            "html": open(msgfile)})
+
+ulist = open(listfile, "rt", encoding = 'utf-8')
+spamreader = csv.reader(ulist)
+for row in spamreader:
+   if row[3] in states:
+      #print(row[0], row[3])
+      request = send_mime_message(row[0])
+      print('Status: ' + str(request.status_code))
+      print('Body: ' + str(request.text))
