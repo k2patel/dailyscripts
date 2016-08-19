@@ -7,7 +7,7 @@ import socket
 import logging
 import logging.handlers
 
-from whichcraft import which
+from distutils import spawn 
 from packaging.version import Version, LegacyVersion
 
 log = logging.getLogger('daacpull')
@@ -34,8 +34,8 @@ def execute_shell(args, shell=False, cwd=None):
 try:
 
    #Get the puppet location
-   p_location = which('puppet')
-   g_location = which('git')
+   p_location = spawn.find_executable("puppet")
+   g_location = spawn.find_executable("git")
 
    # Check if file exists and version number of puppet
    if os.path.exists(p_location):
