@@ -6,7 +6,7 @@ fi
 
 openssl=$(which openssl)
 
-if ${openssl} des3 -salt -in ${1} -out ${2}; then
+if ${openssl} enc -camellia-256-ecb -a -salt -in ${1} -out ${2}; then
 	echo "Successfully converted"
 else
 	echo "Failed Conversion"
