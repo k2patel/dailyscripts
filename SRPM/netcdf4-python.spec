@@ -6,24 +6,24 @@
 
 %global srcname distribute
 # Get hash for release from https://github.com/Unidata/netcdf4-python/releases
-%global commit 26cdeda69a3ff2efe438020390a876234a23550a
+%global commit be7f5d62704d0c23efccf0200f3cd8d8f59f3dcf
 %global shortcommit %(c=%{commit}; echo ${c:0:7})
 
 Name:           netcdf4-python
-Version:        1.1.0
+Version:        1.2.7
 Release:        1%{?dist}
 Summary:        Python/numpy interface to netCDF
 
 Group:          Development/Languages
 License:        MIT
 URL:            https://github.com/Unidata/netcdf4-python
-Source0:        https://github.com/Unidata/netcdf4-python/archive/%{commit}/%{name}-%{version}-%{shortcommit}.tar.gz
+Source0:        https://github.com/Unidata/netcdf4-python/archive/%{commit}/%{name}-v%{version}rel-%{shortcommit}.tar.gz
 # No rpath for library
 # http://code.google.com/p/netcdf4-python/issues/detail?id=138
-Patch0:         netcdf4-python-norpath.patch
+#Patch0:         netcdf4-python-norpath.patch
 # Don't link against hdf5 and z libraries
 # http://code.google.com/p/netcdf4-python/issues/detail?id=139
-Patch1:         netcdf4-python-libs.patch
+#Patch1:         netcdf4-python-libs.patch
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 BuildRequires:  python2-devel
@@ -100,8 +100,8 @@ containing vlens, and vlens containing compound types) are not supported.
 
 %prep
 %setup -q -n %{name}-%{commit}
-%patch0 -p1 -b .norpath
-%patch1 -p1 -b .libs
+#%patch0 -p1 -b .norpath
+#%patch1 -p1 -b .libs
 
 %if 0%{?with_python3}
 rm -rf %{py3dir}

@@ -4,7 +4,7 @@
 
 Name:           cdo
 #BuildRequires:  
-Version:        1.7.0
+Version:        1.9.4
 Release:        1
 Summary:        Climate Data Operators
 License:        GNU GENERAL PUBLIC LICENSE Version 2, June 1991
@@ -12,6 +12,7 @@ Group:          Productivity/Graphics/Visualization/Other
 Requires:       netcdf
 Autoreqprov:    on
 URL:            https://code.zmaw.de/projects/cdo
+Patch0:		cdo-module.patch
 Source0:        cdo-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 
@@ -22,8 +23,8 @@ BuildRequires:  grib_api-devel
 BuildRequires:  proj-devel
 BuildRequires:  fftw-devel
 
-Requires: netcdf =< 4.3.3.1
-Requires: hdf5 =< 1.8.15.1
+Requires: netcdf >= 4.3.3.1
+Requires: hdf5 >= 1.8.15.1
 
 %description
 CDO is a collection of command line Operators to manipulate and analyse Climate model Data.
@@ -44,6 +45,7 @@ Authors:
 
 %prep
 %setup
+%patch0 -p1 -b .module
 
 
 %build
@@ -63,7 +65,10 @@ rm -rf $RPM_BUILD_ROOT
 #%{_prefix}/bin/cdotest
 
 %changelog -n cdo
-* Fri Jan 02 2015 - k2patel@live.com
+* Fri Aug 10 2018 Ketan Patel <patelkr@ornl.gov> - 1.9.4-1
+- Updating to 1.9.4
+
+* Fri Jan 02 2015 - patelkr@ornl.gov
 - Building with all dep.
 * Mon Aug 25 2008 - petri@pik-potsdam.de
 - adapted to cdo-1.2.0

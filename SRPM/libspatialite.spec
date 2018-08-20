@@ -15,6 +15,7 @@
 # Geocallbacks work with SQLite 3.7.3 and up, available in Fedora and EL 7
 %if (0%{?fedora} || 0%{?rhel} > 6)
   %global _geocallback "--enable-geocallbacks"
+  %global _no_checks 1
 %endif
 
 %if 0%{?rhel} == 6
@@ -35,23 +36,23 @@
 
 # check_bufovflw test fails on gcc 4.9
 # https://groups.google.com/forum/#!msg/spatialite-users/zkGP-gPByXk/EAZ-schWn1MJ
-%if 0%{?fedora} >= 21
+%if (0%{?fedora} >= 21 || 0%{?rhel} > 7)
   %global _no_checks 1
 %endif
 
 Name:      libspatialite
 Version:   4.3.0a
-Release:   1%{?dist}
+Release:   10%{?dist}
 Summary:   Enables SQLite to support spatial data
 Group:     System Environment/Libraries
 License:   MPLv1.1 or GPLv2+ or LGPLv2+
 URL:       https://www.gaia-gis.it/fossil/libspatialite
 Source0:   http://www.gaia-gis.it/gaia-sins/%{name}-sources/%{name}-%{version}.tar.gz
 
-BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
 # EPEL 5 reminiscences are for ELGIS
 
+BuildRequires:  gcc
 BuildRequires: freexl-devel
 BuildRequires: geos-devel
 BuildRequires: proj-devel
@@ -112,9 +113,6 @@ make check V=1
 %endif
 
 
-%clean
-rm -rf %{buildroot}
-
 
 %post -p /sbin/ldconfig
 
@@ -135,7 +133,6 @@ rm -rf %{buildroot}
 %{_includedir}/spatialite
 %{_libdir}/%{name}.so
 %{_libdir}/pkgconfig/spatialite.pc
-
 
 %changelog
 * Thu Sep 17 2015 Volker Froehlich <volker27@gmx.at> - 4.3.0a-1

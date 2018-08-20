@@ -22,8 +22,8 @@ Source: http://projects.marsching.org/suphp/download/suphp-%{version}.tar.gz
 #Patch1: suphp-0.6.0-handler2.patch
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 
-BuildRequires: httpd-devel >= 2.0, gcc-c++, automake, autoconf, shtool
-Requires: httpd >= 2.0, php
+BuildRequires: httpd-devel >= 2.0, gcc-c++, automake, autoconf, shtool, libtool, php-devel >= 5.4
+Requires: httpd >= 2.0, php >= 5.4
 
 %description
 The suPHP Apache module together with suPHP itself provides an easy way to

@@ -1,5 +1,5 @@
 Name: hdf
-Version: 4.2.11
+Version: 4.2.13
 Release: 1%{?dist}
 Summary: A general purpose library and file format for storing scientific data
 License: BSD
@@ -59,7 +59,7 @@ HDF development headers and libraries.
 %patch3 -p1 -b .s390
 %patch4 -p1 -b .arm
 %patch5 -p1 -b .destdir
-%patch6 -p1 -b .examplesdir
+%patch6 -p1 -b .exmpdir
 #%patch7 -p1 -b .format
 # For destdir/examplesdir patches
 autoreconf -if
@@ -147,9 +147,15 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/%{name}/
 %{_libdir}/%{name}/
 %{_defaultdocdir}/%{name}/examples
+%{_defaultdocdir}/%{name}/share/hdf4_examples
 
 
 %changelog
+* Wed Aug 08 2018 Ketan Patel <patelkr@ornl.gov> 4.2.13-1
+- Update to 4.2.13
+- Rebase arm, ppc, and s390 patches
+- Add destdir, examplesdir patches to fix installation of examples
+
 * Fri Feb 14 2014 Orion Poplawski <orion@cora.nwra.com> 4.2.10-1
 - Update to 4.2.10
 - Rebase arm, ppc, and s390 patches

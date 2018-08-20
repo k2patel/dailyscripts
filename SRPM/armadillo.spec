@@ -1,12 +1,13 @@
 Name:           armadillo
-Version:        6.400.2
+Version:        8.600.0
 Release:        1%{?dist}
 Summary:        Fast C++ matrix library with interfaces to LAPACK and ATLAS
 
 Group:          Development/Libraries
 License:        MPLv2.0
 URL:            http://arma.sourceforge.net/
-Source:         http://sourceforge.net/projects/arma/files/%{name}-%{version}.tar.gz
+# https://gitlab.com/conradsnicta/armadillo-code/-/archive/8.600.x/armadillo-code-8.600.x.tar.gz
+Source:         http://sourceforge.net/projects/arma/files/%{name}-%{version}.tar.xz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires:  cmake, blas-devel, lapack-devel, atlas-devel, arpack-devel, hdf5-devel
 
@@ -81,6 +82,7 @@ rm -rf $RPM_BUILD_ROOT
 %files devel
 %defattr(-,root,root,-)
 %{_libdir}/*.so
+%{_libdir}/pkgconfig/armadillo.pc
 %{_includedir}/armadillo
 %{_includedir}/armadillo_bits/
 %{_datadir}/Armadillo/
@@ -90,6 +92,10 @@ rm -rf $RPM_BUILD_ROOT
 %doc mex_interface
 
 %changelog
+* Wed Aug 08 2018 Ketan Patel <patelkr@ornl.gov> 8.600.0-1
+- Update to 8.600.0
+- Added pkgconfig file to the rpm
+
 * Fri Jul  4 2014 José Matos <jamatos@fedoraproject.org> - 4.320.0-1
 - update to 4.320.0
 

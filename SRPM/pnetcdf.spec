@@ -4,15 +4,15 @@
 %define sover 0
 
 Name: pnetcdf
-Version: 1.6.1
+Version: 1.7.0
 Release: el7
 Summary: Parallel netCDF: A High Performance API for NetCDF File Access
 License: Open source
 Group: File tools
 Url: http://trac.mcs.anl.gov/projects/parallel-netcdf
-Packager: Ketan Patel <k2patel@live.com>
+Packager: Ketan Patel <patelkr@ornl.gov>
 
-Source: %name-%version.tar
+Source: %name-%version.tar.gz
 
 BuildRequires: %mpiimpl-devel flex gcc-gfortran
 BuildRequires: ghostscript texlive-latex
@@ -141,6 +141,7 @@ mv %{buildroot}/usr/man %{buildroot}/usr/share/
 
 %files -n lib%name-devel-doc
 %doc doc/*.txt examples
+/usr/lib/pkgconfig/*.pc
 
 %changelog
 * Wed Jul 09 2014 Eugeny A. Rostovtsev (REAL) <real at altlinux.org> 1.5.0-alt2

@@ -1,121 +1,223 @@
-%{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
-%{!?python_sitearch: %define python_sitearch %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib(1)")}
-
 Name:           libkml
 Version:        1.3.0
-Release:        99_1.erma%{?dist}
-Summary:        A KML library written in C++ with bindings to other languagues
+Release:        14%{?dist}
+Summary:        Reference implementation of OGC KML 2.2
 
-Group:          Development/Libraries
 License:        BSD
-URL:            http://code.google.com/p/%{name}/
-Source0:        http://%{name}.googlecode.com/files/%{name}-%{version}.tar.gz
-Source1:        libkml.conf
-#Patch0:         libkml-third_party_removal.diff
-#Patch1:         libkml-0.6.1.configure_ac.patch
-#Patch2:         libkml-fix-gcc-warning.patch
-BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
+URL:            https://github.com/libkml/libkml
+Source0:        https://github.com/libkml/libkml/archive/%{version}/libkml-%{version}.tar.gz
 
-# requires swig >= 1.3.35
-BuildRequires:  cppunit, swig >= 1.3.35
-BuildRequires:  libcurl-devel, expat-devel, python-devel, chrpath
-BuildRequires:  minizip-devel, zlib-devel,  boost-devel
-BuildRequires:  autoconf, libtool
-Requires:       python
+## See https://github.com/libkml/libkml/pull/239
+Patch0:         0001-Fix-build-failure-due-to-failure-to-convert-pointer-.patch
+Patch1:         0002-Fix-mistaken-use-of-std-cerr-instead-of-std-endl.patch
+Patch2:         0003-Fix-python-tests.patch
+Patch3:         0004-Correctly-build-and-run-java-test.patch
+# Fix a fragile test failing on i686
+Patch4:         fragile_test.patch
+# Don't bytecompile python sources as part of build process, leave it to rpmbuild
+Patch5:         libkml_dont-bytecompile.patch
+# Add crypt.h which was removed from Fedora minizip package (see #1424609)
+Patch6:         libkml_crypth.patch
+
+BuildRequires:  cmake
+BuildRequires:  curl-devel
+BuildRequires:  boost-devel
+BuildRequires:  expat-devel
+BuildRequires:  gtest-devel
+BuildRequires:  gcc-c++
+BuildRequires:  java-devel
+BuildRequires:  junit
+BuildRequires:  make
+BuildRequires:  minizip-devel
+%if 0%{?fedora} || 0%{?rhel} > 7
+BuildRequires:  python2-devel
+BuildRequires:  python3-devel
+%else
+BuildRequires:  python-devel
+%endif
+BuildRequires:  swig
+BuildRequires:  uriparser-devel
+BuildRequires:  zlib-devel
+
+Provides:       bundled(minizip) = 1.2.9
+
+%global __requires_exclude_from ^%{_docdir}/.*$
+%global __provides_exclude_from ^%{python2_sitearch}/.*\\.so$
+
 
 %description
-Libkml is an implementation of the OGC KML 2.2 standard. is written in
-C++ and bindings are available via SWIG to other languages. It can be
-used in applications that want to parse, generate and operate on KML.
+Reference implementation of OGC KML 2.2.
+It also includes implementations of Google's gx: extensions used by Google
+Earth, as well as several utility libraries for working with other formats.
+
+
+%package -n python2-%{name}
+Summary:        Python 2 bindings for %{name}
+Requires:       %{name}%{?_isa} = %{version}-%{release}
+%{?python_provide:%python_provide python2-%{name}}
+
+%description -n python2-%{name}
+The python2-%{name} package contains Python 2 bindings for %{name}.
+
+
+%package -n python3-%{name}
+Summary:        Python 3 bindings for %{name}
+Requires:       %{name}%{?_isa} = %{version}-%{release}
+%{?python_provide:%python_provide python%{python3_pkgversion}-%{name}}
+
+%description -n python3-%{name}
+The python3-%{name} package contains Python 3 bindings for %{name}.
+
+
+%package java
+Summary:        Java bindings for %{name}
+Requires:       %{name}%{?_isa} = %{version}-%{release}
+
+%description java
+The %{name}-java package contains Java bindings for %{name}.
+
 
 %package        devel
 Summary:        Development files for %{name}
-Group:          Development/Libraries
-Requires:       %{name} = %{version}-%{release}
+Requires:       %{name}%{?_isa} = %{version}-%{release}
+Requires:       boost-devel
+Requires:       expat-devel
 
 %description    devel
 The %{name}-devel package contains libraries and header files for
 developing applications that use %{name}.
 
+
 %prep
-%setup -q
-#rm -rf third_party
-#%patch0 -p0 -b .third_party
-#%patch1 -p1 -b .configure_ac
-#%patch2 -p1 -b .fixwarning
+%autosetup -p1
+
 
 %build
-autoreconf -fi
-%configure --disable-static \
-           --disable-java
-make %{?_smp_mflags}
+mkdir build_py2
+pushd build_py2
+%ifarch armv7hl
+%define awtlib -DJAVA_AWT_LIBRARY=`find /usr/lib/jvm/ -name libjawt.so | grep jre/lib/arm \`
+%endif
+%cmake -DWITH_SWIG=ON -DWITH_PYTHON=ON -DWITH_JAVA=ON \
+  -DJNI_INSTALL_DIR=%{_libdir}/%{name} \
+  -DCMAKE_INSTALL_DIR=%{_libdir}/cmake/%{name} \
+  -DINCLUDE_INSTALL_DIR=%{_includedir}/kml \
+  -DPYTHON_LIBRARY=%{_libdir}/libpython%{python2_version}.so \
+  -DPYTHON_INCLUDE_DIR=%{_includedir}/python%{python2_version}/ \
+  -DPYTHON_INSTALL_DIR=%{python2_sitearch} \
+  %{?awtlib} \
+  -DBUILD_TESTING=ON \
+  -DBUILD_EXAMPLES=ON \
+  ..
+%make_build
+popd
+
+mkdir build_py3
+pushd build_py3
+%cmake -DWITH_SWIG=ON -DWITH_PYTHON=ON -DWITH_JAVA=OFF \
+  -DJNI_INSTALL_DIR=%{_libdir}/%{name} \
+  -DCMAKE_INSTALL_DIR=%{_libdir}/cmake/%{name} \
+  -DINCLUDE_INSTALL_DIR=%{_includedir}/kml \
+  -DPYTHON_LIBRARY=%{_libdir}/libpython%{python3_version}m.so \
+  -DPYTHON_INCLUDE_DIR=%{_includedir}/python%{python3_version}m/ \
+  -DPYTHON_INSTALL_DIR=%{python3_sitearch} \
+  -DBUILD_TESTING=ON \
+  -DBUILD_EXAMPLES=OFF \
+  ..
+%make_build
+popd
+
 
 %install
-rm -rf $RPM_BUILD_ROOT
-
-make install DESTDIR=$RPM_BUILD_ROOT
-find $RPM_BUILD_ROOT -name '*.la' -exec rm -f {} ';'
-
-# remove compiled examples
-cd examples; make clean;cd ..
-
-# remove x permssion from examples folder files
-find examples -type f -print | xargs chmod a-x
-
-# move libs to kml (for keeping third party libs away)
-mkdir -p $RPM_BUILD_ROOT%{_libdir}/libkml/
-mv $RPM_BUILD_ROOT%{_libdir}/*.so* $RPM_BUILD_ROOT%{_libdir}/libkml/
-mkdir -p $RPM_BUILD_ROOT%{_sysconfdir}/ld.so.conf.d/
-install -pm 644 %{SOURCE1} $RPM_BUILD_ROOT%{_sysconfdir}/ld.so.conf.d/
+%make_install -C build_py2
+%make_install -C build_py3
 
 
-#removing rpaths with chrpath
-chrpath --delete $RPM_BUILD_ROOT%{_libdir}/libkml/libkmlengine_swig_python.so.0.0.0
-chrpath --delete $RPM_BUILD_ROOT%{_libdir}/libkml/libkmlengine.so.0.0.0
-chrpath --delete $RPM_BUILD_ROOT%{_libdir}/libkml/libkmldom_swig_python.so.0.0.0
-chrpath --delete $RPM_BUILD_ROOT%{python_sitearch}/_kmlengine.so
-chrpath --delete $RPM_BUILD_ROOT%{python_sitearch}/_kmldom.so
-chrpath --delete $RPM_BUILD_ROOT%{python_sitearch}/_kmlbase.so
+%check
+pushd build_py2
+ctest -V
+popd
+pushd build_py3
+ctest -V
+popd
 
-# remove .libs and .deps directories
-find . -name '.libs'  -type d -print | xargs rm -rf
-find . -name '.deps'  -type d -print | xargs rm -rf
-
-# fix unstripping-binary-or-object warning
-chmod a+x $RPM_BUILD_ROOT%{python_sitearch}/_kmlengine.so
-chmod a+x $RPM_BUILD_ROOT%{python_sitearch}/_kmldom.so
-
-%clean
-rm -rf $RPM_BUILD_ROOT
 
 %post -p /sbin/ldconfig
 
 %postun -p /sbin/ldconfig
 
+
 %files
-%defattr(-,root,root,-)
-%doc COPYING
-%doc AUTHORS
-%doc README
-%doc ChangeLog
-%dir %{_libdir}/libkml
-%{_libdir}/libkml/*.so.*
-%{python_sitearch}/*.so
-%{python_sitearch}/*.py
-%{python_sitearch}/*.pyc
-%{python_sitearch}/*.pyo
-%{_sysconfdir}/ld.so.conf.d/libkml.conf
+%license LICENSE
+%doc AUTHORS README.md
+%{_libdir}/libkml*.so.*
+
+%files -n python2-%{name}
+%{python2_sitearch}/*.so
+%{python2_sitearch}/*.py*
+
+%files -n python3-%{name}
+%{python3_sitearch}/*.so
+%{python3_sitearch}/*.py
+%{python3_sitearch}/__pycache__/*.pyc
+
+%files java
+%{_javadir}/LibKML.jar
+%{_libdir}/%{name}/
 
 %files devel
-%defattr(-,root,root,-)
 %doc examples
-%{_includedir}/*
-%dir %{_libdir}/libkml
-%{_libdir}/libkml/*.so
+%{_includedir}/kml/
+%{_libdir}/libkml*.so
+%{_libdir}/pkgconfig/%{name}.pc
+%{_libdir}/cmake/%{name}/
 
 %changelog
-* Mon Jul 07 2014 Thomas J. Baker <tjb@unh.edu> - 1.3.0-1
-- rebuilt latest version for ERMA
+* Fri Jul 13 2018 Fedora Release Engineering <releng@fedoraproject.org> - 1.3.0-14
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_29_Mass_Rebuild
+
+* Tue Jun 19 2018 Miro Hrončok <mhroncok@redhat.com> - 1.3.0-13
+- Rebuilt for Python 3.7
+
+* Tue Jun 19 2018 Sandro Mani <manisandro@gmail.com> - 1.3.0-12
+- Locally add crypt.h from minizip, which was removed in minizip-devel (see #1424609)
+
+* Tue Jun 19 2018 Miro Hrončok <mhroncok@redhat.com> - 1.3.0-11
+- Rebuilt for Python 3.7
+
+* Sun Feb 18 2018 Sandro Mani <manisandro@gmail.com> - 1.3.0-10
+- Add missing BR: gcc-c++, make
+
+* Wed Feb 07 2018 Fedora Release Engineering <releng@fedoraproject.org> - 1.3.0-9
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_28_Mass_Rebuild
+
+* Mon Aug 07 2017 Sandro Mani <manisandro@gmail.com> - 1.3.0-8
+- Workaround armv7hl FTBFS
+- Add python3 bindings
+
+* Thu Aug 03 2017 Fedora Release Engineering <releng@fedoraproject.org> - 1.3.0-7
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_27_Binutils_Mass_Rebuild
+
+* Wed Jul 26 2017 Fedora Release Engineering <releng@fedoraproject.org> - 1.3.0-6
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_27_Mass_Rebuild
+
+* Tue Jul 18 2017 Jonathan Wakely <jwakely@redhat.com> - 1.3.0-5
+- Rebuilt for Boost 1.64
+
+* Fri Feb 10 2017 Fedora Release Engineering <releng@fedoraproject.org> - 1.3.0-4
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_26_Mass_Rebuild
+
+* Tue Jul 19 2016 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 1.3.0-3
+- https://fedoraproject.org/wiki/Changes/Automatic_Provides_for_Python_RPM_Packages
+
+* Fri Apr 08 2016 Sandro Mani <manisandro@gmail.com> - 1.3.0-2
+- Don't call it Google's reference implementation in Summary/Description
+- Update Source URL
+- Add python_provide macro
+- Enable tests
+
+* Thu Mar 31 2016 Sandro Mani <manisandro@gmail.com> - 1.3.0-1
+- Update to 1.3.0
 
 * Tue Feb 08 2011 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 0.6.1-8
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_15_Mass_Rebuild
@@ -143,7 +245,7 @@ rm -rf $RPM_BUILD_ROOT
 * Fri Jan 16 2009 Rakesh Pandit <rakesh@fedoraproject.org> 0.6.1-1
 - Updated to 0.6.1
 
-* Mon Oct 05 2008 Rakesh Pandit <rakesh@fedoraproject.org> 0.4.0-2
+* Mon Oct 06 2008 Rakesh Pandit <rakesh@fedoraproject.org> 0.4.0-2
 - Added >= 1.3.35 for swing
 
 * Sat Aug 09 2008 Rakesh Pandit <rakesh@fedoraproject.org> 0.4.0-1

@@ -1,6 +1,6 @@
 Name:		proj
-Version:	4.9.2
-Release:	1%{?dist}
+Version:	5.1.0
+Release:	2%{?dist}
 Epoch:		0
 Summary:	Cartographic projection software (PROJ.4)
 
@@ -8,7 +8,7 @@ Group:		Applications/Engineering
 License:	MIT
 URL:		http://trac.osgeo.org/proj
 Source0:	http://download.osgeo.org/%{name}/%{name}-%{version}.tar.gz
-Source1:	http://download.osgeo.org//proj/proj-datumgrid-1.5.zip
+Source1:	http://download.osgeo.org//proj/proj-datumgrid-1.7.zip
 Patch0:		proj.copyright.patch
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
@@ -120,6 +120,9 @@ rm -rf %{buildroot}
 %attr(0644,root,root) %{_datadir}/%{name}/epsg
 
 %changelog
+* Fri Aug 10 2018 Ketan Patel <patelkr@ornl.gov> - 0:5.1.0-1
+- Updating datumgrid and software
+
 * Thu Jul 26 2012 Devrim GÜNDÜZ <devrim@gunduz.org> - 0:4.8.0-2
 - Add --without-jni to configure, for clean build..
 

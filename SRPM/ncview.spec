@@ -1,6 +1,6 @@
 Name:           ncview
-Version:        2.1.6
-Release:        2%{?dist}
+Version:        2.1.7
+Release:        3%{?dist}
 Summary:        A visual browser for netCDF format files
 Group:          Applications/Engineering
 License:        GPLv1
@@ -33,7 +33,7 @@ color maps, invert the data, etc.
  --with-ppm_incdir=%{_includedir}/netpbm \
  --with-udunits2_incdir=%{_includedir}/udunits2 \
  CC=/usr/lib64/mpich/bin/mpicc CXX=/usr/lib64/mpich/bin/mpicxx LDFLAGS="-L/usr/lib64/mpich/lib/ -L/usr/lib64/openmpi/lib/ -L/usr/lib64/hdf" LD_LIBRARY_PATH="/usr/lib64/openmpi/lib/ /usr/lib/gcc/x
-86_64-redhat-linux/4.8.2/32/ /usr/lib64/hdf/" CPPFLAGS="-I/usr/include/hdf -I/usr/include/mpich-x86_64 -I/usr/include/openmpi-x86_64" \
+86_64-redhat-linux/4.8.5/32/ /usr/lib64/hdf/" CPPFLAGS="-I/usr/include/hdf -I/usr/include/mpich-x86_64 -I/usr/include/openmpi-x86_64" \
  --x-libraries=%{_libdir} --datadir=%{_datadir}/ncview
 
 #  WARNING!
@@ -69,6 +69,10 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Mon Aug 20 2018 Ketan Patel <patelkr@ornl.gov> - 2.1.7-2
+- Updating to 2.1.7
+- Updating all required libraries
+
 * Thu Feb 14 2013 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 2.1.2-2
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_19_Mass_Rebuild
 

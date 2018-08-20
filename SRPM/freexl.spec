@@ -1,6 +1,6 @@
 Name:      freexl
-Version:   1.0.2
-Release:   2%{?dist}
+Version:   1.0.5
+Release:   1%{?dist}
 Summary:   Library to extract data from within an Excel spreadsheet 
 Group:     System Environment/Libraries
 License:   MPLv1.1 or GPLv2+ or LGPLv2+

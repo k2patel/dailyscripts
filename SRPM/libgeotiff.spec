@@ -1,6 +1,6 @@
 Name:      libgeotiff
-Version:   1.4.0
-Release:   6%{?dist}
+Version:   1.4.2
+Release:   1%{?dist}
 Summary:   GeoTIFF format library
 Group:     System Environment/Libraries
 License:   MIT
@@ -96,10 +96,12 @@ rm -rf %{buildroot}
 %{_bindir}/applygeo
 %{_bindir}/geotifcp
 %{_bindir}/listgeo
-%{_bindir}/makegeo
 %{_libdir}/%{name}.so.2*
 %{_mandir}/man1/listgeo.1.gz
+%{_mandir}/man1/applygeo.1.gz
+%{_mandir}/man1/geotifcp.1.gz
 %dir %{_datadir}/epsg_csv
+%{_datadir}/epsg_csv/*.p*
 %attr(0644,root,root) %{_datadir}/epsg_csv/*.csv
 
 %files devel
@@ -110,6 +112,11 @@ rm -rf %{buildroot}
 %{_libdir}/pkgconfig/%{name}.pc
 
 %changelog
+* Fri Aug 10 2018 Ketan Patel <patelkr@ornl.gov> - 1.4.2-1
+- Updating 1.4.2
+- Removing makegeo as suggested by Even Rouault / 2016-08-16 # Check ChangeLog
+- Fixing man pages
+
 * Thu Oct 29 2015 Volker Fröhlich <volker27@gmx.at> - 1.4.0-6
 - Install the real makegeo binary, also solving BZ #1235027
 - Re-enable multiple compiler workers

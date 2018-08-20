@@ -6,7 +6,7 @@
 # NOTE:  Try not to release new versions to released versions of Fedora
 # You need to recompile all users of HDF5 for each version change
 Name: hdf5
-Version: 1.8.15.1
+Version: 1.10.2
 Release: 1%{?dist}
 Summary: A general purpose library and file format for storing scientific data
 License: BSD
@@ -15,12 +15,10 @@ URL: http://www.hdfgroup.org/HDF5/
 
 Source0: http://www.hdfgroup.org/ftp/HDF5/releases/hdf5-%{version}%{?snaprel}/src/hdf5-%{version}%{?snaprel}.tar.bz2
 Source1: h5comp
-# For man pages
-#Source2: http://ftp.us.debian.org/debian/pool/main/h/hdf5/hdf5_%{version}-1.debian.tar.gz
 Patch0: hdf5-LD_LIBRARY_PATH.patch
 Patch1: hdf5-1.8.8-tstlite.patch
 # https://bugzilla.redhat.com/show_bug.cgi?id=925545
-Patch2: hdf5-aarch64.patch
+#Patch2: hdf5-aarch64.patch
 
 BuildRequires: krb5-devel, openssl-devel, zlib-devel, gcc-gfortran, time
 # Needed for mpi tests
@@ -155,9 +153,9 @@ HDF5 parallel openmpi static libraries
 # the tstlite test fails with "stack smashing detected" on these arches
 %patch1 -p1 -b .tstlite
 %endif
-%patch2 -p1 -b .aarch64
+# %patch2 -p1 -b .aarch64
 #This should be fixed in 1.8.7
-find \( -name '*.[ch]*' -o -name '*.f90' -o -name '*.txt' \) -exec chmod -x {} +
+#find \( -name '*.[ch]*' -o -name '*.f90' -o -name '*.txt' \) -exec chmod -x {} +
 
 
 %build
@@ -264,10 +262,6 @@ cat > ${RPM_BUILD_ROOT}%{macrosdir}/macros.hdf5 <<EOF
 %%_hdf5_version	%{version}
 EOF
 
-# Install man pages from debian
-#mkdir -p ${RPM_BUILD_ROOT}%{_mandir}/man1
-#cp -p debian/man/*.1 ${RPM_BUILD_ROOT}%{_mandir}/man1/
-
 
 %check
 make -C build check
@@ -309,6 +303,9 @@ done
 %{_bindir}/h5repart
 %{_bindir}/h5stat
 %{_bindir}/h5unjam
+%{_bindir}/h5clear
+%{_bindir}/h5format_convert
+%{_bindir}/h5watch
 %{_libdir}/*.so.*
 %doc ./COPYING
 %doc ./release_docs/RELEASE.txt
@@ -332,6 +329,9 @@ done
 %files mpich
 %doc COPYING MANIFEST README.txt release_docs/RELEASE.txt
 %doc release_docs/HISTORY*.txt
+%{_libdir}/mpich/bin/h5clear
+%{_libdir}/mpich/bin/h5format_convert
+%{_libdir}/mpich/bin/h5watch
 %{_libdir}/mpich/bin/gif2h5
 %{_libdir}/mpich/bin/h52gif
 %{_libdir}/mpich/bin/h5copy
@@ -367,6 +367,9 @@ done
 %files openmpi
 %doc COPYING MANIFEST README.txt release_docs/RELEASE.txt
 %doc release_docs/HISTORY*.txt
+%{_libdir}/openmpi/bin/h5clear
+%{_libdir}/openmpi/bin/h5format_convert
+%{_libdir}/openmpi/bin/h5watch
 %{_libdir}/openmpi/bin/gif2h5
 %{_libdir}/openmpi/bin/h52gif
 %{_libdir}/openmpi/bin/h5copy
@@ -400,7 +403,10 @@ done
 
 
 %changelog
-* Mon Dec 14 2015 Ketan Patel <k2patel@live.com> 1.8.15-1
+* Wed Aug 08 2018 Ketan Patel <patelkr@ornl.gov> 1.10.2-1
+- Removing patch2 which is now included.
+
+* Mon Dec 14 2015 Ketan Patel <patelkr@ornl.gov> 1.8.15-1
 - Remove Debian documentation
 - https://www.hdfgroup.org/ftp/HDF5/current/bin/RPMS/hdf5-1.8.16-1-x86_64-szip.spec
 

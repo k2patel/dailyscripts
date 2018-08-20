@@ -62,6 +62,6 @@ echo "Please see /etc/httpd/conf.d/10_mod_jk.conf for configuration option"
 apxs -e -A -n jk_module $(apxs -q LIBEXECDIR)/mod_jk.so
 
 %changelog
-* Fri Dec 04 2015 Ketan Patel <k2patel@live.com> - 1.1
+* Fri Dec 04 2015 Ketan Patel <patelkr@ornl.gov> - 1.1
 - Please see detail list of changelog at https://tomcat.apache.org/connectors-doc/miscellaneous/changelog.html
 

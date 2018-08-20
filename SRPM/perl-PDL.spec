@@ -9,8 +9,8 @@
 %endif
 
 Name:           perl-PDL
-%global cpan_version 2.015
-Version:        2.15.0
+%global cpan_version 2.019
+Version:        2.19.0
 Release:        3%{?dist}
 Summary:        The Perl Data Language
 Group:          Development/Libraries

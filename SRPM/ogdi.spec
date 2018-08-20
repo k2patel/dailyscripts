@@ -1,6 +1,6 @@
 Name:           ogdi
 Version:        3.2.0
-Release:        0.25.beta2%{?dist}
+Release:        0.25.beta2.1%{?dist}
 Summary:        Open Geographic Datastore Interface
 Group:          Applications/Engineering
 License:        BSD

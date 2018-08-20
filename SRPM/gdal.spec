@@ -13,44 +13,24 @@
 # Soname should be bumped on API/ABI break
 # http://trac.osgeo.org/gdal/ticket/4543
 
-# Conditionals and structures for EL 5 are there
-# to make life easier for downstream ELGIS.
-# Sadly noarch doesn't work in EL 5, see
-# http://fedoraproject.org/wiki/EPEL/GuidelinesAndPolicies
-
-# He also suggest to use --with-static-proj4 to actually link to proj, instead of dlopen()ing it.
-
 # Major digit of the proj so version
-%global proj_somaj 9
+%global proj_somaj 13
 
 # Tests can be of a different version
-%global testversion 2.0.1
+%global testversion 2.3.1
 %global run_tests 1
 
-%global with_spatialite 1
-%global spatialite "--with-spatialite"
-
-# No ppc64 build for spatialite in EL6
-# https://bugzilla.redhat.com/show_bug.cgi?id=663938
-%if 0%{?rhel} == 6
-%ifnarch ppc64
-%global with_spatialite 0
-%global spatialite "--without-spatialite"
-%endif
-%endif
-
-
 Name:      gdal
-Version:   2.0.1
-Release:   2%{?dist}
+Version:   2.3.1
+Release:   1%{?dist}
 Summary:   GIS file format library
 Group:     System Environment/Libraries
 License:   MIT
 URL:       http://www.gdal.org
 # Source0:   http://download.osgeo.org/gdal/%%{version}/gdal-%%{version}.tar.xz
-# See PROVENANCE.TXT-fedora and the cleaner script for details!
+# See PROVENANCE.TXT and the cleaner script for details!
 
-Source0:   %{name}-%{version}-fedora.tar.xz
+Source0:   %{name}-%{version}.tar.xz
 Source1:   http://download.osgeo.org/%{name}/%{testversion}/%{name}autotest-%{testversion}.tar.gz
 Source2:   %{name}.pom
 
@@ -60,15 +40,13 @@ Source3:   %{name}-cleaner.sh
 Source4:   PROVENANCE.TXT-fedora
 
 # Patch to use system g2clib
-Patch1:    %{name}-g2clib.patch
+# Patch1:    %{name}-g2clib.patch
 # Patch for Fedora JNI library location
 Patch2:    %{name}-jni.patch
-
-# https://trac.osgeo.org/gdal/ticket/6159#ticket
-Patch3:    %{name}-2.0.1-iso8211-include.patch
-
+# Patch for NASA mrf
+Patch3:    %{name}-mrf.patch
 # Fedora uses Alternatives for Java
-Patch8:    %{name}-1.9.0-java.patch
+Patch8:    %{name}-java.patch
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
@@ -85,7 +63,7 @@ BuildRequires: expat-devel
 BuildRequires: fontconfig-devel
 # No freexl in EL5
 BuildRequires: freexl-devel
-BuildRequires: g2clib-static
+BuildRequires: g2clib-devel
 BuildRequires: geos-devel
 BuildRequires: ghostscript
 BuildRequires: hdf-devel
@@ -101,10 +79,7 @@ BuildRequires: libgta-devel
 BuildRequires: libjpeg-devel
 BuildRequires: libpng-devel
 
-%if %{with_spatialite}
 BuildRequires: libspatialite-devel
-%endif
-
 BuildRequires: libtiff-devel
 # No libwebp in EL 5 and 6
 BuildRequires: libwebp-devel
@@ -115,8 +90,10 @@ BuildRequires: libdap-devel
 BuildRequires: librx-devel
 BuildRequires: mysql-devel
 BuildRequires: numpy
+BuildRequires: python34-numpy
 BuildRequires: pcre-devel
 BuildRequires: ogdi-devel
+BuildRequires: perl-devel
 BuildRequires: openjpeg2-devel
 BuildRequires: perl(ExtUtils::MakeMaker)
 BuildRequires: pkgconfig
@@ -124,20 +101,10 @@ BuildRequires: poppler-devel
 BuildRequires: postgresql-devel
 BuildRequires: proj-devel
 BuildRequires: python2-devel
+BuildRequires: python34-devel
 BuildRequires: sqlite-devel
 BuildRequires: swig
 BuildRequires: texlive-latex
-%if 0%{?fedora} >= 20
-BuildRequires: texlive-collection-fontsrecommended
-BuildRequires: texlive-collection-langcyrillic
-BuildRequires: texlive-collection-langportuguese
-BuildRequires: texlive-collection-latex
-BuildRequires: texlive-epstopdf
-BuildRequires: tex(multirow.sty)
-BuildRequires: tex(sectsty.sty)
-BuildRequires: tex(tocloft.sty)
-BuildRequires: tex(xtab.sty)
-%endif
 BuildRequires: unixODBC-devel
 BuildRequires: xerces-c-devel
 BuildRequires: xz-devel
@@ -249,6 +216,16 @@ The GDAL Python modules provide support to handle multiple GIS file formats.
 The package also includes a couple of useful utilities in Python.
 
 
+%package python3
+Summary: Python modules for the GDAL file format library
+Group:   Development/Libraries
+Requires: python34-numpy
+Requires: %{name}-libs%{?_isa} = %{version}-%{release}
+
+%description python3
+The GDAL Python 3 modules provide support to handle multiple GIS file formats.
+
+
 %package doc
 Summary: Documentation for GDAL
 Group:   Documentation
@@ -258,13 +235,13 @@ BuildArch: noarch
 This package contains HTML and PDF documentation for GDAL.
 
 # We don't want to provide private Python extension libs
-%global __provides_exclude_from ^%{python_sitearch}/.*\.so$
+%global __provides_exclude_from ^(%{python2_sitearch}|%{python3_sitearch})/.*\.so$
 
 %prep
-%setup -q -n %{name}-%{version}-fedora
+%setup
 
 # Unpack tests to the same directory
-%setup -q -D -a 1 -n %{name}-%{version}-fedora
+%setup -q -D -a 1 -n %{name}-%{version}
 
 # Delete bundled libraries
 rm -rf frmts/zlib
@@ -274,11 +251,11 @@ rm -rf frmts/jpeg/libjpeg \
     frmts/jpeg/libjpeg12
 rm -rf frmts/gtiff/libgeotiff \
     frmts/gtiff/libtiff
-rm -r frmts/grib/degrib18/g2clib-1.0.4
+# rm -r frmts/grib/degrib/g2clib
 
-%patch1 -p1 -b .g2clib~
+# %patch1 -p1 -b .g2clib~
 %patch2 -p1 -b .jni~
-%patch3 -p1 -b .iso8211~
+%patch3 -p1 -b .mrf~
 %patch8 -p1 -b .java~
 
 # Copy in PROVENANCE.TXT-fedora
@@ -311,17 +288,6 @@ pushd $f
 popd
 done
 
-# Fix build order with parallel make
-# http://trac.osgeo.org/gdal/ticket/5346
-sed -i '/^swig-modules:/s/lib-target/apps-target/' GNUmakefile
-
-# Workaround about wrong result in configure
-# armadillo returns a warning about gcc versions 4.7.0 or 4.7.1
-# due to http://gcc.gnu.org/bugzilla/show_bug.cgi?id=53549
-# configure interprets the result as an error so ignore it
-# this patch can/should be removed after gcc 4.7.2 is released
-sed -i 's|if test -z "`${CXX} testarmadillo.cpp -o testarmadillo -larmadillo 2>&1`"|if true|' configure
-
 # Replace hard-coded library- and include paths
 sed -i 's|@LIBTOOL@|%{_bindir}/libtool|g' GDALmake.opt.in
 sed -i 's|-L\$with_cfitsio -L\$with_cfitsio/lib -lcfitsio|-lcfitsio|g' configure
@@ -341,61 +307,28 @@ sed -i 's|libproj.so|libproj.so.%{proj_somaj}|g' ogr/ogrct.cpp
 # Fix Python installation path
 sed -i 's|setup.py install|setup.py install --root=%{buildroot}|' swig/python/GNUmakefile
 
-# Must be corrected for 64 bit architectures other than Intel
-# http://trac.osgeo.org/gdal/ticket/4544
-# Should be gone in 2.0
-sed -i 's|test \"$ARCH\" = \"x86_64\"|test \"$libdir\" = \"/usr/lib64\"|g' configure
+# Fix Python samples to depend on correct interpreter
+mkdir -p swig/python3/samples
+pushd swig/python/samples
+for f in `find . -name '*.py'`; do
+  sed 's|^#!.\+python$|#!/usr/bin/python3|' $f > ../../python3/samples/$f
+  chmod --reference=$f ../../python3/samples/$f
+  sed -i 's|^#!.\+python$|#!/usr/bin/python2|' $f
+done
+popd
 
-# Adjust check for LibDAP version
-# http://trac.osgeo.org/gdal/ticket/4545
-%if %cpuarch == 64
-  sed -i 's|with_dods_root/lib|with_dods_root/lib64|' configure
-%endif
-
-# Fix mandir
-sed -i "s|^mandir=.*|mandir='\${prefix}/share/man'|" configure
-
-# Activate support for JPEGLS
-#sed -i 's|^#HAVE_CHARLS|HAVE_CHARLS|' GDALmake.opt.in
-#sed -i 's|#CHARLS_INC = -I/path/to/charls_include|CHARLS_INC = -I%{_includedir}/CharLS|' GDALmake.opt.in
-#sed -i 's|#CHARLS_LIB = -L/path/to/charls_lib -lCharLS|CHARLS_LIB = -lCharLS|' GDALmake.opt.in
-
-# Replace default plug-in dir
-# Solved in 2.0
-# http://trac.osgeo.org/gdal/ticket/4444
-%if %cpuarch == 64
-  sed -i 's|GDAL_PREFIX "/lib/gdalplugins"|GDAL_PREFIX "/lib64/gdalplugins"|' \
-    gcore/gdaldrivermanager.cpp \
-    ogr/ogrsf_frmts/generic/ogrsfdriverregistrar.cpp
-%endif
-
-# Remove man dir, as it blocks a build target.
-# It obviously slipped into the tarball and is not in Trunk (April 17th, 2011)
-#rm -rf man
-
+# LIBS=-lgrib2c \
 
 %build
-#TODO: Couldn't I have modified that in the prep section?
-%ifarch sparcv9 sparc64 s390 s390x
-export CFLAGS="$RPM_OPT_FLAGS -fPIC"
-%else
-export CFLAGS="$RPM_OPT_FLAGS -fpic"
-%endif
-export CXXFLAGS="$CFLAGS -I%{_includedir}/libgeotiff"
-export CPPFLAGS="$CPPFLAGS -I%{_includedir}/libgeotiff"
-
-# For future reference:
-# epsilon: Stalled review -- https://bugzilla.redhat.com/show_bug.cgi?id=660024
-# Building without pgeo driver, because it drags in Java
-
 %configure \
-        LIBS=-lgrib2c \
+        CFLAGS="-g -O2 -I%{_includedir}/libgeotiff" \
+        CXXFLAGS="-g -O2 -I%{_includedir}/libgeotiff" \
         --with-autoload=%{_libdir}/%{name}plugins \
         --datadir=%{_datadir}/%{name}/ \
         --includedir=%{_includedir}/%{name}/ \
         --prefix=%{_prefix} \
         --without-bsb \
-        --with-armadillo          \
+        --with-armadillo=yes \
         --with-curl               \
         --with-cfitsio=%{_prefix} \
         --with-dods-root=%{_prefix} \
@@ -407,9 +340,11 @@ export CPPFLAGS="$CPPFLAGS -I%{_includedir}/libgeotiff"
         --with-gta                \
         --with-hdf4               \
         --with-hdf5               \
+	--with-libkml		  \
         --with-jasper             \
         --with-java               \
         --with-jpeg               \
+	--with-libjson-c          \
         --without-jpeg12          \
         --with-liblzma            \
         --with-libtiff=external   \
@@ -425,12 +360,13 @@ export CPPFLAGS="$CPPFLAGS -I%{_includedir}/libgeotiff"
         --with-pg                 \
         --with-png                \
         --with-poppler            \
-        %{spatialite}             \
+        --with-spatialite         \
         --with-sqlite3            \
         --with-threads            \
         --with-webp               \
         --with-xerces             \
         --enable-shared           \
+        --with-mrf                \
         --with-perl               \
         --with-python
 
@@ -447,6 +383,13 @@ pushd swig/perl
   echo > Makefile.PL;
 popd
 
+# Install the Perl modules in the right place
+sed -i 's|INSTALLDIRS = site|INSTALLDIRS = vendor|' swig/perl/Makefile_*
+
+# Don't append installation info to pod
+#TODO: What about the pod?
+sed -i 's|to $(DESTINSTALLARCHLIB)\/perllocal.pod|> \/dev\/null|g' swig/perl/Makefile_*
+
 # Build some utilities, as requested in BZ #1271906
 pushd ogr/ogrsf_frmts/s57/
   make all
@@ -456,17 +399,15 @@ pushd frmts/iso8211/
   make all
 popd
 
-# Install the Perl modules in the right place
-sed -i 's|INSTALLDIRS = site|INSTALLDIRS = vendor|' swig/perl/Makefile_*
-
-# Don't append installation info to pod
-#TODO: What about the pod?
-sed -i 's|>> $(DESTINSTALLARCHLIB)\/perllocal.pod|> \/dev\/null|g' swig/perl/Makefile_*
-
 # Make Java module and documentation
 pushd swig/java
   make
   ./make_doc.sh
+popd
+
+# Make Python 3 module
+pushd swig/python
+  %{__python3} setup.py build
 popd
 
 # --------- Documentation ----------
@@ -506,6 +447,12 @@ done
 %install
 rm -rf %{buildroot}
 
+# Install Python 3 module
+# Must be done first so executables are Python 2.
+pushd swig/python
+  %{__python3} setup.py install --skip-build --root %{buildroot}
+popd
+
 make    DESTDIR=%{buildroot} \
         install \
         install-man
@@ -519,13 +466,15 @@ install -pm 755 frmts/iso8211/8211view %{buildroot}%{_bindir}
 mkdir -p %{buildroot}%{_libdir}/%{name}plugins
 
 #TODO: Don't do that?
-find %{buildroot}%{perl_vendorarch} -name "*.dox" -exec rm -rf '{}' \;
+mkdir -p %{buildroot}%{perl_vendorlib}
+mv %{buildroot}/usr/lib/perl5/x86_64-linux-thread-multi/* %{buildroot}%{perl_vendorlib}/
+find %{buildroot}%{perl_vendorlib} -name "*.dox" -exec rm -rf '{}' \;
 rm -f %{buildroot}%{perl_archlib}/perllocal.pod
 
 # Correct permissions
 #TODO and potential ticket: Why are the permissions not correct?
-find %{buildroot}%{perl_vendorarch} -name "*.so" -exec chmod 755 '{}' \;
-find %{buildroot}%{perl_vendorarch} -name "*.pm" -exec chmod 644 '{}' \;
+find %{buildroot}%{perl_vendorlib} -name "*.so" -exec chmod 755 '{}' \;
+find %{buildroot}%{perl_vendorlib} -name "*.pm" -exec chmod 644 '{}' \;
 
 #TODO: JAR files that require JNI shared objects MUST be installed in %{_libdir}/%{name}. The JNI shared objects themselves must also be installed in %{_libdir}/%{name}.
 #Java programs that wish to make calls into native libraries do so via the Java Native Interface (JNI). A Java package uses JNI if it contains a .so
@@ -558,7 +507,7 @@ cp -pr swig/java/java/org %{buildroot}%{_javadocdir}/%{name}
 # Install refmans
 for docdir in %{docdirs}; do
   pushd $docdir
-    path=%{_builddir}/%{name}-%{version}-fedora/refman
+    path=%{_builddir}/%{name}-%{version}/refman
     mkdir -p $path/html/$docdir
     cp -r html $path/html/$docdir
 
@@ -664,7 +613,8 @@ for f in 'GDAL*' BandProperty ColorAssociation CutlineTransformer DatasetPropert
   rm -rf %{buildroot}%{_mandir}/man1/$f.1*
 done
 #TODO: What's that?
-rm -f %{buildroot}%{_mandir}/man1/*_%{name}-%{version}-fedora_apps_*
+rm -f %{buildroot}%{_mandir}/man1/*_%{name}-%{version}_apps_*
+rm -f %{buildroot}%{_mandir}/man1/_home_rouault_dist_wrk_gdal_apps_.1*
 
 %check
 %if %{run_tests}
@@ -672,6 +622,9 @@ for i in -I/usr/lib/jvm/java/include{,/linux}; do
     java_inc="$java_inc $i"
 done
 
+mkdir -p %{buildroot}%{_mandir}
+mv -f %{buildroot}/usr/man/* %{buildroot}%{_mandir}/
+rm -f %{buildroot}%{_mandir}/man1/_scr_lrknox_rpmbuild_BUILD_gdal-2.3.1_apps_.1.gz
 
 pushd %{name}autotest-%{testversion}
   # Export test enviroment
@@ -720,6 +673,8 @@ popd
 %{_bindir}/gdalserver
 %{_bindir}/gdalsrsinfo
 %{_bindir}/gdaltransform
+%{_bindir}/gnmanalyse
+%{_bindir}/gnmmanage
 %{_bindir}/nearblack
 %{_bindir}/ogr*
 %{_bindir}/8211*
@@ -734,9 +689,11 @@ popd
 %exclude %{_mandir}/man1/gdal_sieve.1*
 %{_mandir}/man1/nearblack.1*
 %{_mandir}/man1/ogr*.1*
+%{_mandir}/man1/gnm*.1*
+%{_prefix}/etc/bash_completion.d/gdal-bash-completion.sh
 
 %files libs
-%doc LICENSE.TXT NEWS PROVENANCE.TXT COMMITERS PROVENANCE.TXT-fedora
+%doc LICENSE.TXT NEWS PROVENANCE.TXT PROVENANCE.TXT-fedora
 %{_libdir}/libgdal.so.*
 %{_datadir}/%{name}
 #TODO: Possibly remove files like .dxf, .dgn, ...
@@ -761,7 +718,7 @@ popd
 
 %files perl
 %doc swig/perl/README
-%{perl_vendorarch}/*
+%{perl_vendorlib}/*
 %{_mandir}/man3/*.3pm*
 
 %files python
@@ -776,11 +733,26 @@ popd
 %{_mandir}/man1/gdal_merge.1*
 %{_mandir}/man1/gdal_retile.1*
 %{_mandir}/man1/gdal_sieve.1*
-%{python_sitearch}/osgeo
-%{python_sitearch}/GDAL-%{version}-py*.egg-info
-%{python_sitearch}/osr.py*
-%{python_sitearch}/ogr.py*
-%{python_sitearch}/gdal*.py*
+%{python2_sitearch}/osgeo
+%{python2_sitearch}/GDAL-%{version}-py*.egg-info
+%{python2_sitearch}/osr.py*
+%{python2_sitearch}/ogr.py*
+%{python2_sitearch}/gdal*.py*
+%{python2_sitearch}/gnm.py*
+
+%files python3
+%doc swig/python/README.txt
+%doc swig/python3/samples
+%{python3_sitearch}/osgeo
+%{python3_sitearch}/GDAL-%{version}-py*.egg-info
+%{python3_sitearch}/osr.py
+%{python3_sitearch}/__pycache__/osr.*.py*
+%{python3_sitearch}/ogr.py
+%{python3_sitearch}/__pycache__/ogr.*.py*
+%{python3_sitearch}/gdal*.py
+%{python3_sitearch}/__pycache__/gdal*.*.py*
+%{python3_sitearch}/gnm.py
+%{python3_sitearch}/__pycache__/gnm*.*.py*
 
 %files doc
 %doc gdal_frmts ogrsf_frmts refman
@@ -794,6 +766,40 @@ popd
 #Or as before, using ldconfig
 
 %changelog
+* Thu Aug 16 2018 Ketan Patel <patelkr@ornl.gov> - 2.3.1-1
+- Removing old running patches and fixes not required.
+- Fixing issue for not having armadillo library not being processed.
+- Fixing issue with perl library change
+- Fixing various documents and links
+
+* Mon Apr 18 2016 Tom Hughes <tom@compton.nu> - 2.0.2-5
+- Rebuild for libdap change Resoloves: #1328104
+
+* Tue Feb 16 2016 Elliott Sales de Andrade <quantum.analyst@gmail.com> - 2.0.2-4
+- Add Python 3 support
+
+* Sun Feb 14 2016 Volker Froehlich <volker27@gmx.at> - 2.0.2-3
+- Add patch for GDAL issue #6360
+
+* Mon Feb 08 2016 Volker Froehlich <volker27@gmx.at> - 2.0.2-2
+- Rebuild for armadillo 6
+
+* Thu Feb 04 2016 Volker Froehlich <volker27@gmx.at> - 2.0.2-1
+- New upstream release
+- Fix geos support (BZ #1284714)
+
+* Wed Feb 03 2016 Fedora Release Engineering <releng@fedoraproject.org> - 2.0.1-6
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_24_Mass_Rebuild
+
+* Fri Jan 22 2016 Marek Kasik <mkasik@redhat.com> 2.0.1-5
+- Rebuild for poppler-0.40.0
+
+* Fri Jan 15 2016 Adam Jackson <ajax@redhat.com> 2.0.1-4
+- Rebuild for libdap soname bump
+
+* Mon Dec 28 2015 Igor Gnatenko <i.gnatenko.brain@gmail.com> - 2.0.1-3
+- Rebuilt for libwebp soname bump
+
 * Sun Oct 18 2015 Volker Froehlich <volker27@gmx.at> - 2.0.1-2
 - Solve BZ #1271906 (Build iso8211 and s57 utilities)
 

@@ -1,12 +1,12 @@
 Name:           ncl
-Version:        6.3.0
-Release:        6%{?dist}
+Version:        6.5.0
+Release:        1%{?dist}
 Summary:        NCAR Command Language and NCAR Graphics
 
 Group:          Applications/Engineering
 License:        BSD
 URL:            http://www.ncl.ucar.edu
-Source0:        https://www.earthsystemgrid.org/download/fileDownload.htm?logicalFileId=bec58cb3-cd9b-11e4-bb80-00c0f03d5b7c#/ncl_ncarg-%{version}.tar.gz
+Source0:        https://github.com/NCAR/ncl/archive/%{version}/%{name}-%{version}.tar.gz
 Source1:        Site.local.ncl
 Source2:        ncarg.csh
 Source3:        ncarg.sh
@@ -30,8 +30,6 @@ Patch1:         ncarg-4.4.1-deps.patch
 Patch2:         ncl-5.1.0-ppc64.patch
 # Add needed -lm to ictrans build, remove unneeded -lrx -lidn -ldl from ncl
 Patch3:         ncl-libs.patch
-# Fix build without EOS
-Patch4:         ncl-eos.patch
 # don't have the installation target depends on the build target since
 # for library it implies running ranlib and modifying the library timestamp
 Patch10:        ncl-5.0.0-no_install_dep.patch
@@ -43,17 +41,20 @@ Patch13:        ncl-5.1.0-includes.patch
 # Add Fedora secondary arches
 Patch16:        ncl-5.2.1-secondary.patch
 
-BuildRequires:  /bin/csh, gcc-gfortran
+BuildRequires:  /bin/csh
+BuildRequires:  gcc-c++
+BuildRequires:  gcc-gfortran
 %if 0%{?fedora} || 0%{?rhel} >= 7
-BuildRequires:  netcdf-devel
+BuildRequires:  netcdf-fortran-devel
 %else
 BuildRequires:  netcdf-devel
 %endif
 BuildRequires:  atlas-devel
 BuildRequires:  cairo-devel
 BuildRequires:  hdf-static, hdf-devel >= 4.2r2
-BuildRequires:  g2clib-static
-BuildRequires:  gdal-devel
+#BuildRequires:  g2clib-static
+BuildRequires:  gdal-devel >= 2.2
+BuildRequires:  gsl-devel
 BuildRequires:  libjpeg-devel
 BuildRequires:  proj-devel
 # imake needed for makedepend
@@ -95,7 +96,7 @@ BuildArch:      noarch
 Summary:        Development files for NCL and NCAR Graphics
 Group:          Development/Libraries
 Requires:       %{name} = %{version}-%{release}
-Requires:       libXext-devel
+Requires:       cairo-devel
 Provides:       ncl-static = %{version}-%{release}
 Provides:       ncarg-devel = %{version}-%{release}
 Obsoletes:      ncarg-devel < %{version}-%{release}
@@ -117,12 +118,11 @@ Example programs and data using NCL.
 
 
 %prep
-%setup -q -n ncl_ncarg-%{version}
+%setup -q -n ncl-%{version}
 %patch0 -p1 -b .paths
 %patch1 -p1 -b .deps
 %patch2 -p1 -b .ppc64
 %patch3 -p1 -b .libs
-%patch4 -p1 -b .eos
 %patch10 -p1 -b .no_install_dep
 %patch11 -p1 -b .build_n_scripts
 %patch12 -p1 -b .netcdff
@@ -153,11 +153,12 @@ sed -i -e '/StdDefines/s/-DSYSV/-D_ISOC99_SOURCE/' config/LINUX
 
 rm -rf external/blas external/lapack
 
-# fix the install directories
+# fix the install directories, etc.
 sed -e 's;@prefix@;%{_prefix};' \
  -e 's;@mandir@;%{_mandir};' \
  -e 's;@datadir@;%{_datadir};' \
  -e 's;@libdir@;%{_libdir};' \
+ -e 's;@g2clib@;%{g2clib};' \
  %{SOURCE1} > config/Site.local
 
 #Setup the profile scripts
@@ -180,7 +181,7 @@ sed -i -e 's;load "\$NCARG_ROOT/lib/ncarg/nclex\([^ ;]*\);loadscript(ncargpath("
 
 #make Build CCOPTIONS="$RPM_OPT_FLAGS -fPIC -Werror-implicit-function-declaration" F77=gfortran F77_LD=gfortran\
 
-make Build CCOPTIONS="$RPM_OPT_FLAGS -fPIC -fno-strict-aliasing -fopenmp" F77=gfortran F77_LD=gfortran\
+make Build CCOPTIONS="$RPM_OPT_FLAGS -std=c99 -fPIC -fno-strict-aliasing -fopenmp" F77=gfortran F77_LD=gfortran\
  CTOFLIBS="-lgfortran" FCOPTIONS="$RPM_OPT_FLAGS -fPIC -fno-second-underscore -fno-range-check -fopenmp" \
  COPT= FOPT=
 
@@ -336,6 +337,42 @@ done
 
 
 %changelog
+* Sun Jul 29 2018 Orion Poplawski <orion@cora.nwra.com> - 6.5.0-1
+- Update to 6.5.0
+
+* Fri Jul 13 2018 Fedora Release Engineering <releng@fedoraproject.org> - 6.4.0-6
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_29_Mass_Rebuild
+
+* Fri Mar 2 2018 Orion Poplawski <orion@nwra.com> - 6.4.0-5
+- Handle different g2clib names
+
+* Thu Feb 08 2018 Fedora Release Engineering <releng@fedoraproject.org> - 6.4.0-4
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_28_Mass_Rebuild
+
+* Thu Aug 03 2017 Fedora Release Engineering <releng@fedoraproject.org> - 6.4.0-3
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_27_Binutils_Mass_Rebuild
+
+* Wed Jul 26 2017 Fedora Release Engineering <releng@fedoraproject.org> - 6.4.0-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_27_Mass_Rebuild
+
+* Tue Mar 7 2017 Orion Poplawski <orion@cora.nwra.com> - 6.4.0-1
+- Update to 6.4.0
+
+* Mon Feb 06 2017 Orion Poplawski <orion@cora.nwra.com> - 6.3.0-11
+- Rebuild for gcc 7
+
+* Sun Dec 04 2016 Orion Poplawski <orion@cora.nwra.com> - 6.3.0-10
+- Rebuild for jasper 2.0
+
+* Thu Sep 29 2016 Orion Poplawski <orion@cora.nwra.com> - 6.3.0-9
+- Make ncl-devel require cairo-devel
+
+* Thu Feb 04 2016 Fedora Release Engineering <releng@fedoraproject.org> - 6.3.0-8
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_24_Mass_Rebuild
+
+* Fri Jan 22 2016 Orion Poplawski <orion@cora.nwra.com> - 6.3.0-7
+- Rebuild for netcdf 4.4.0
+
 * Sun Sep 13 2015 Peter Robinson <pbrobinson@fedoraproject.org> 6.3.0-6
 - Fix FTBFS on aarch64
 
@@ -440,7 +477,7 @@ done
 * Mon Nov 22 2010 - Orion Poplawski <orion@cora.nwra.com> - 5.2.1-3
 - Add compatibility links to /usr/lib/ncarg
 
-* Mon Sep 6 2010 - Dan Horák <dan[at]danny.cz> - 5.2.1-2
+* Mon Sep 6 2010 - Dan Horรกk <dan[at]danny.cz> - 5.2.1-2
 - Recognize Fedora secondary architectures
 
 * Tue Aug 10 2010 - Orion Poplawski <orion@cora.nwra.com> - 5.2.1-1
@@ -484,73 +521,4 @@ done
 
 * Thu Mar 5 2009 - Orion Poplawski <orion@cora.nwra.com> - 5.1.0-1
 - Update to 5.1.0
-- Rebase ppc64, netcdff patch
-- Drop triangle, flex, hdf, png, wrapit, uint32 patch upstreamed
-
-* Tue Feb 24 2009 - Orion Poplawski <orion@cora.nwra.com> - 5.0.0-19
-- Rebuild for gcc 4.4.0 and other changes
-- Move data files into noarch sub-package
-- Make examples sub-package noarch
-
-* Mon Feb 2 2009 - Orion Poplawski <orion@cora.nwra.com> - 5.0.0-18
-- Fix unowned directory (bug #483468)
-
-* Mon Dec 15 2008 Deji Akingunola <dakingun@gmail.com> - 5.0.0-17
-- Rebuild for atlas-3.8.2
-
-* Fri Dec 12 2008 - Orion Poplawski <orion@cora.nwra.com> - 5.0.0-16
-- Re-add profile.d startup scripts to set NCARG env variables
-
-* Mon Dec 8 2008 - Orion Poplawski <orion@cora.nwra.com> - 5.0.0-15
-- Try changing the udunits path in config/Project
-
-* Thu Dec 4 2008 - Orion Poplawski <orion@cora.nwra.com> - 5.0.0-14
-- Actually apply udunits patch
-
-* Thu Nov 27 2008 - Orion Poplawski <orion@cora.nwra.com> - 5.0.0-13
-- Enable udunits support add use system udunits.dat
-
-* Thu Sep 11 2008 - Orion Poplawski <orion@cora.nwra.com> - 5.0.0-12
-- Rebuild for new libdap
-- Fix netcdf include location
-
-* Fri Apr 11 2008 - Orion Poplawski <orion@cora.nwra.com> - 5.0.0-11
-- Add patch to fix raster image problems on non 32-bit platforms
-- Add more includes to includes patch
-
-* Thu Mar 27 2008 - Orion Poplawski <orion@cora.nwra.com> - 5.0.0-10
-- Add patch to fixup some missing includes
-- Define _ISOC99_SOURCE to expose vsnprintf prototype
-- Update hdf patch to remove hdf/netcdf.h include
-
-* Mon Feb 18 2008 - Orion Poplawski <orion@cora.nwra.com> - 5.0.0-9
-- Rename Site.local to Site.local.ncl
-- Add comment for imake BR
-
-* Wed Feb  6 2008 - Orion Poplawski <orion@cora.nwra.com> - 5.0.0-8
-- Move examples into separate sub-package
-
-* Fri Feb  1 2008 - Patrice Dumas <pertusus@free.fr> - 5.0.0-7
-- put noarch files in datadir
-- avoid compilation in %%install
-
-* Mon Jan 14 2008 - Orion Poplawski <orion@cora.nwra.com> - 5.0.0-6
-- Make BR hdf-devel >= 4.2r2.
-
-* Fri Dec 14 2007 - Orion Poplawski <orion@cora.nwra.com> - 5.0.0-5
-- Fixup wrapit flex compilation
-
-* Fri Dec 14 2007 - Orion Poplawski <orion@cora.nwra.com> - 5.0.0-4
-- Actually get ncl to build
-
-* Sun Nov 18 2007 - Orion Poplawski <orion@cora.nwra.com> - 5.0.0-3
-- Move robj to -devel
-- Provide ncl-static in ncl-devel
-- Turn on BuildUdunits.  Turn off BuildV5D.
-- Drop config/LINUX patch, use sed
-
-* Wed Nov 14 2007 - Orion Poplawski <orion@cora.nwra.com> - 5.0.0-2
-- Fixup profile.d script permissions, Group, move aed.a to devel
-
-* Tue Nov  6 2007 - Orion Poplawski <orion@cora.nwra.com> - 5.0.0-1
-- Initial ncl package, based on ncarg
+- Rebase ppc64, netcdf

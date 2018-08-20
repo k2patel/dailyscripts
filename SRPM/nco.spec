@@ -1,5 +1,5 @@
 Name:           nco
-Version:        4.5.3
+Version:        4.7.5
 Release:        1%{?dist}
 Summary:        Suite of programs for manipulating NetCDF/HDF4 files
 Group:          Applications/Engineering
@@ -7,6 +7,7 @@ License:        GPLv3
 URL:            http://nco.sourceforge.net/
 
 Source0:        http://nco.sourceforge.net/src/nco-%{version}.tar.gz
+#Patch0:         nco-4.6.0_c++.patch
 #Patch0:         nco-4.0.3-install_C_headers.patch
 #%if 0%{?rhel} && 0%{?rhel} <= 5
 #Patch out variables from in.cdl that earlier versioins of netcdf complain about
@@ -61,7 +62,7 @@ This package contains the NCO static libs.
 
 %prep
 %setup -q
-#%patch0 -p1 -b .install_C_headers
+#%patch0 -p1 -b .libver
 #%if 0%{?rhel} && 0%{?rhel} <= 5
 #%patch1 -p1 -b .fillvalue
 #%endif
@@ -82,7 +83,7 @@ mkdir -p $RPM_BUILD_ROOT%{_includedir}/nco
 make install DESTDIR=$RPM_BUILD_ROOT
 rm $RPM_BUILD_ROOT%{_libdir}/*.la
 rm -f $RPM_BUILD_ROOT%{_infodir}/dir
-chrpath -d $RPM_BUILD_ROOT%{_bindir}/*
+for file in $RPM_BUILD_ROOT/usr/bin/*; do chrpath -d $file || true; done
 
 
 %post
@@ -100,10 +101,10 @@ fi
 
 %files
 %doc doc/README doc/LICENSE doc/rtfm.txt 
-%{_bindir}/ncap
 %{_bindir}/ncap2
 %{_bindir}/ncatted
 %{_bindir}/ncbo
+%{_bindir}/ncclimo
 %{_bindir}/ncdiff
 %{_bindir}/ncea
 %{_bindir}/ncecat
@@ -113,14 +114,13 @@ fi
 %{_bindir}/ncpdq
 %{_bindir}/ncra
 %{_bindir}/ncrcat
+%{_bindir}/ncremap
 %{_bindir}/ncrename
 %{_bindir}/ncwa
-%{_mandir}/man1/ncap.1*
 %{_mandir}/man1/ncap2.1*
 %{_mandir}/man1/ncatted.1*
 %{_mandir}/man1/ncbo.1*
-%{_mandir}/man1/ncdiff.1*
-%{_mandir}/man1/ncea.1*
+%{_mandir}/man1/ncclimo.1*
 %{_mandir}/man1/ncecat.1*
 %{_mandir}/man1/nces.1*
 %{_mandir}/man1/ncflint.1*
@@ -129,6 +129,7 @@ fi
 %{_mandir}/man1/ncpdq.1*
 %{_mandir}/man1/ncra.1*
 %{_mandir}/man1/ncrcat.1*
+%{_mandir}/man1/ncremap.1*
 %{_mandir}/man1/ncrename.1*
 %{_mandir}/man1/ncwa.1*
 %{_infodir}/*
@@ -137,13 +138,17 @@ fi
 %files devel
 %{_includedir}/nco/
 %{_libdir}/libnco.so
-%{_libdir}/libnco_c++.so
+%{_libdir}/libnco_c+*.so
 
 %files static
 %{_libdir}/libnco*.a
 
 
 %changelog
+* Fri Aug 10 2018 Ketan Patel <patelkr@ornl.gov> 4.7.5-1
+- ncap is deprecated and removed from rpm
+- update to 4.7.5
+
 * Wed Jul 23 2014 Orion Poplawski <orion@cora.nwra.com> 4.4.4-1
 - Update to 4.4.4
 - Strip rpaths

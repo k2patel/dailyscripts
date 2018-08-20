@@ -1,6 +1,6 @@
 Name:           netcdf
-Version:        4.3.3.1
-Release:        9%{?dist}
+Version:        4.4.1
+Release:        1%{?dist}
 Summary:        Libraries for the Unidata network Common Data Form
 
 Group:          Applications/Engineering
@@ -13,6 +13,7 @@ Source0:        https://github.com/Unidata/netcdf-c/archive/v%{version}.tar.gz#/
 #Patch0:         netcdf-pkgconfig.patch
 # Upstream patch to support hdf5 1.8.13 mpio change
 #Patch1:         netcdf-mpio.patch
+Patch0:		netcdf-dimscale.patch
 
 BuildRequires:  chrpath
 BuildRequires:  doxygen
@@ -23,7 +24,7 @@ BuildRequires:  libcurl-devel
 BuildRequires:  m4
 BuildRequires:  zlib-devel
 BuildRequires:  hdf-devel >= 4.2.10
-BuildRequires:  libpnetcdf-devel
+# BuildRequires:  libpnetcdf-devel
 %ifnarch s390 s390x %{arm}
 BuildRequires:  valgrind
 %endif
@@ -31,7 +32,7 @@ BuildRequires:  valgrind
 #https://trac.mcs.anl.gov/projects/mpich2/ticket/1576
 BuildRequires:  openssh-clients
 Requires:       hdf5 = %{_hdf5_version}
-Requires:       hdf >= 4.2.10
+Requires:       hdf >= 4.2.12
 
 %global with_mpich 1
 %global with_openmpi 1
@@ -181,6 +182,7 @@ NetCDF parallel openmpi static libraries
 %setup -q -n %{name}-%{version}
 # %patch0 -p1 -b .pkgconfig
 # %patch1 -p1 -b .mpio
+%patch0 -p0 -b .dimscale
 autoreconf -vif
 mkdir build
 
@@ -275,7 +277,7 @@ done
 %{_bindir}/ncdump
 %{_bindir}/ncgen
 %{_bindir}/ncgen3
-%{_libdir}/*.so.7*
+%{_libdir}/*.so.11*
 %{_mandir}/man1/*
 
 
@@ -299,7 +301,7 @@ done
 %{_libdir}/mpich/bin/ncdump
 %{_libdir}/mpich/bin/ncgen
 %{_libdir}/mpich/bin/ncgen3
-%{_libdir}/mpich/lib/*.so.7*
+%{_libdir}/mpich/lib/*.so.11*
 %{_libdir}/mpich/lib/*.settings
 %{_libdir}/libmpich.so.10
 %{_libdir}/libopa.so.1
@@ -324,7 +326,7 @@ done
 %{_libdir}/openmpi/bin/ncdump
 %{_libdir}/openmpi/bin/ncgen
 %{_libdir}/openmpi/bin/ncgen3
-%{_libdir}/openmpi/lib/*.so.7*
+%{_libdir}/openmpi/lib/*.so.11*
 %{_libdir}/openmpi/lib/*.settings
 %doc %{_libdir}/openmpi/share/man/man1/*.1*
 

@@ -1,13 +1,13 @@
 Name:           netcdf-perl
 Version:        1.2.4
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Perl extension module for scientific data access via the netCDF API
 
 Group:          Development/Libraries
 License:        NetCDF
 URL:            http://www.unidata.ucar.edu/software/netcdf-perl/
 Source0:        ftp://ftp.unidata.ucar.edu/pub/netcdf-perl/netcdf-perl-%{version}.tar.gz
-Source1:        netcdf-2.3
+Source1:        netcdf-4.4
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires:  perl-devel, netcdf-devel
 Requires:  perl(:MODULE_COMPAT_%(eval "`%{__perl} -V:version`"; echo $version))
@@ -67,7 +67,7 @@ rm -rf $RPM_BUILD_ROOT
 %{perl_vendorarch}/auto/*
 %{perl_vendorarch}/NetCDF.pm
 %{_mandir}/man1/*.1*
-%{_mandir}/man3/*.3*
+%{_mandir}/man3/*.4*
 
 
 %changelog
