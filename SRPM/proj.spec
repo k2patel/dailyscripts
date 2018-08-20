@@ -120,7 +120,7 @@ rm -rf %{buildroot}
 %attr(0644,root,root) %{_datadir}/%{name}/epsg
 
 %changelog
-* Fri Aug 10 2018 Ketan Patel <patelkr@ornl.gov> - 0:5.1.0-1
+* Fri Aug 10 2018 Ketan Patel <k2patel@live.com> - 0:5.1.0-1
 - Updating datumgrid and software
 
 * Thu Jul 26 2012 Devrim GÜNDÜZ <devrim@gunduz.org> - 0:4.8.0-2

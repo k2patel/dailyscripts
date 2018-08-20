@@ -66,10 +66,10 @@ apxs -e -A -n auth_urs_module $(apxs -q LIBEXECDIR)/mod_auth_urs.so
 
 
 %changelog
-* Thu Feb 02 2017 Ketan Patel <patelkr@ornl.gov> - 1.2.1-2
+* Thu Feb 02 2017 Ketan Patel <k2patel@live.com> - 1.2.1-2
 - Added missing content to /usr/local/share folder so it can be copied.
 - updated echo to provide those information.
-* Wed Feb 01 2017 Ketan Patel <patelkr@ornl.gov> - 1.2.1
+* Wed Feb 01 2017 Ketan Patel <k2patel@live.com> - 1.2.1
 - Added support for the webdav
-* Fri Dec 04 2015 Ketan Patel <patelkr@ornl.gov> - 1.1
+* Fri Dec 04 2015 Ketan Patel <k2patel@live.com> - 1.1
 - Please see detail list of changelog at https://git.earthdata.nasa.gov/projects/AAM/repos/apache-urs-authentication-module/commits

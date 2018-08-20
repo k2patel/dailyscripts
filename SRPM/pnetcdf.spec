@@ -10,7 +10,7 @@ Summary: Parallel netCDF: A High Performance API for NetCDF File Access
 License: Open source
 Group: File tools
 Url: http://trac.mcs.anl.gov/projects/parallel-netcdf
-Packager: Ketan Patel <patelkr@ornl.gov>
+Packager: Ketan Patel <k2patel@live.com>
 
 Source: %name-%version.tar.gz
 

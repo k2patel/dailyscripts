@@ -65,10 +65,10 @@ rm -rf $RPM_BUILD_ROOT
 #%{_prefix}/bin/cdotest
 
 %changelog -n cdo
-* Fri Aug 10 2018 Ketan Patel <patelkr@ornl.gov> - 1.9.4-1
+* Fri Aug 10 2018 Ketan Patel <k2patel@live.com> - 1.9.4-1
 - Updating to 1.9.4
 
-* Fri Jan 02 2015 - patelkr@ornl.gov
+* Fri Jan 02 2015 - k2patel@live.com
 - Building with all dep.
 * Mon Aug 25 2008 - petri@pik-potsdam.de
 - adapted to cdo-1.2.0

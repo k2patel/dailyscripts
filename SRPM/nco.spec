@@ -145,7 +145,7 @@ fi
 
 
 %changelog
-* Fri Aug 10 2018 Ketan Patel <patelkr@ornl.gov> 4.7.5-1
+* Fri Aug 10 2018 Ketan Patel <k2patel@live.com> 4.7.5-1
 - ncap is deprecated and removed from rpm
 - update to 4.7.5
 

@@ -69,7 +69,7 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
-* Mon Aug 20 2018 Ketan Patel <patelkr@ornl.gov> - 2.1.7-2
+* Mon Aug 20 2018 Ketan Patel <k2patel@live.com> - 2.1.7-2
 - Updating to 2.1.7
 - Updating all required libraries
 

@@ -151,7 +151,7 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
-* Wed Aug 08 2018 Ketan Patel <patelkr@ornl.gov> 4.2.13-1
+* Wed Aug 08 2018 Ketan Patel <k2patel@live.com> 4.2.13-1
 - Update to 4.2.13
 - Rebase arm, ppc, and s390 patches
 - Add destdir, examplesdir patches to fix installation of examples

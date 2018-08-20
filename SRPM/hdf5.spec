@@ -403,10 +403,10 @@ done
 
 
 %changelog
-* Wed Aug 08 2018 Ketan Patel <patelkr@ornl.gov> 1.10.2-1
+* Wed Aug 08 2018 Ketan Patel <k2patel@live.com> 1.10.2-1
 - Removing patch2 which is now included.
 
-* Mon Dec 14 2015 Ketan Patel <patelkr@ornl.gov> 1.8.15-1
+* Mon Dec 14 2015 Ketan Patel <k2patel@live.com> 1.8.15-1
 - Remove Debian documentation
 - https://www.hdfgroup.org/ftp/HDF5/current/bin/RPMS/hdf5-1.8.16-1-x86_64-szip.spec
 

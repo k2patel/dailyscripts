@@ -112,7 +112,7 @@ rm -rf %{buildroot}
 %{_libdir}/pkgconfig/%{name}.pc
 
 %changelog
-* Fri Aug 10 2018 Ketan Patel <patelkr@ornl.gov> - 1.4.2-1
+* Fri Aug 10 2018 Ketan Patel <k2patel@live.com> - 1.4.2-1
 - Updating 1.4.2
 - Removing makegeo as suggested by Even Rouault / 2016-08-16 # Check ChangeLog
 - Fixing man pages

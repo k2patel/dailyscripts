@@ -766,7 +766,7 @@ popd
 #Or as before, using ldconfig
 
 %changelog
-* Thu Aug 16 2018 Ketan Patel <patelkr@ornl.gov> - 2.3.1-1
+* Thu Aug 16 2018 Ketan Patel <k2patel@live.com> - 2.3.1-1
 - Removing old running patches and fixes not required.
 - Fixing issue for not having armadillo library not being processed.
 - Fixing issue with perl library change

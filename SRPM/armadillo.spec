@@ -92,7 +92,7 @@ rm -rf $RPM_BUILD_ROOT
 %doc mex_interface
 
 %changelog
-* Wed Aug 08 2018 Ketan Patel <patelkr@ornl.gov> 8.600.0-1
+* Wed Aug 08 2018 Ketan Patel <k2patel@live.com> 8.600.0-1
 - Update to 8.600.0
 - Added pkgconfig file to the rpm
 

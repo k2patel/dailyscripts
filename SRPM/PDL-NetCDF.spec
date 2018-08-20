@@ -139,5 +139,5 @@ find %{buildroot}%{_prefix}             \
 %defattr(-,root,root)
 
 %changelog
-* Fri Aug 4 2017 lrknox@k2patelrad.ornl.gov
+* Fri Aug 4 2017 k2patel@live.com
 - Initial build.

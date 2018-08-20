@@ -79,5 +79,5 @@ make test
 [ "%{buildroot}" != "/" ] && rm -rf %{buildroot}
 
 %changelog
-* Wed Jan 20 2016 lrknox@k2patelrad.ornl.gov
+* Wed Jan 20 2016 k2patel@live.com
 - Initial build.
