@@ -28,13 +28,11 @@ color maps, invert the data, etc.
 
 
 %build
-%configure --with-netcdf_incdir=%{_includedir}/netcdf/ \
- --with-nc-config=/usr/lib64/mpich/bin/nc-config \
+%configure \
+ --with-nc-config=/usr/bin/nc-config \
  --with-ppm_incdir=%{_includedir}/netpbm \
  --with-udunits2_incdir=%{_includedir}/udunits2 \
- CC=/usr/lib64/mpich/bin/mpicc CXX=/usr/lib64/mpich/bin/mpicxx LDFLAGS="-L/usr/lib64/mpich/lib/ -L/usr/lib64/openmpi/lib/ -L/usr/lib64/hdf" LD_LIBRARY_PATH="/usr/lib64/openmpi/lib/ /usr/lib/gcc/x
-86_64-redhat-linux/4.8.5/32/ /usr/lib64/hdf/" CPPFLAGS="-I/usr/include/hdf -I/usr/include/mpich-x86_64 -I/usr/include/openmpi-x86_64" \
- --x-libraries=%{_libdir} --datadir=%{_datadir}/ncview
+ --x-libraries=%{_libdir} --datadir=%{_datadir}/ncview 
 
 #  WARNING!
 #  The parallel build was tested and it does NOT work.

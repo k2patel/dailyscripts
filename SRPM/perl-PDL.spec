@@ -19,7 +19,7 @@ Url:            http://pdl.perl.org/
 Source0:        http://search.cpan.org/CPAN/authors/id/C/CH/CHM/PDL-%{cpan_version}.tar.gz
 # Uncomment to enable PDL::IO::Browser
 # Patch0:         perl-PDL-2.4.10-settings.patch
-Patch1:         perl-PDL-2.8.0-hdf.patch
+# Patch1:         perl-PDL-2.8.0-hdf.patch
 # Disable Proj support when it's not compatible, bug #839651
 Patch2:         PDL-2.4.10-Disable-PDL-GIS-Proj.patch
 # Compile Slatec as PIC, needed for ARM
@@ -29,7 +29,7 @@ Patch4:         PDL-2.14.0-Disable-PDL-Slatec.patch
 # AutoReqProv: no
 # GSL 2 support
 # https://sourceforge.net/p/pdl/bugs/407/
-Patch5:         perl-PDL-gsl.patch
+#Patch5:         perl-PDL-gsl.patch
 BuildRequires:  coreutils
 BuildRequires:  fftw2-devel
 BuildRequires:  findutils
@@ -171,7 +171,7 @@ such commercial packages as IDL and MatLab.
 %setup -q -n PDL-%{cpan_version}
 # Uncomment to enable PDL::IO::Browser
 # %%patch0 -p1 -b .settings
-%patch1 -p1 -b .hdf
+#%patch1 -p1 -b .hdf
 %if %{without proj}
 %patch2 -p1 -b .proj
 %endif
@@ -179,7 +179,7 @@ such commercial packages as IDL and MatLab.
 %if %{without slatec}
 %patch4 -p1 -b .slatec
 %endif
-%patch5 -p1 -b .gsl
+#%patch5 -p1 -b .gsl
 # Fix shellbang
 sed -e 's,^#!/usr/bin/env perl,%(perl -MConfig -e 'print $Config{startperl}'),' -i Perldl2/pdl2
 

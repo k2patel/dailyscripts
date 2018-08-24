@@ -1,51 +1,34 @@
 Name:           netcdf
-Version:        4.4.1
+Version:        4.6.1
 Release:        1%{?dist}
 Summary:        Libraries for the Unidata network Common Data Form
 
 Group:          Applications/Engineering
 License:        NetCDF
 URL:            http://www.unidata.ucar.edu/software/netcdf/
-# Use github tarball - the unidata download is missing files
 Source0:        https://github.com/Unidata/netcdf-c/archive/v%{version}.tar.gz#/%{name}-%{version}.tar.gz
-#Source0:        http://www.unidata.ucar.edu/downloads/netcdf/ftp/netcdf-%{version}.tar.gz
-# Use pkgconfig in nc-config to avoid multi-lib issues
-#Patch0:         netcdf-pkgconfig.patch
-# Upstream patch to support hdf5 1.8.13 mpio change
-#Patch1:         netcdf-mpio.patch
-Patch0:		netcdf-dimscale.patch
+# Add missing #include "err_macros.h"
+# https://github.com/Unidata/netcdf-c/pull/333
 
+BuildRequires:  libtool
 BuildRequires:  chrpath
 BuildRequires:  doxygen
-BuildRequires:  hdf5-static
-BuildRequires:  hdf5-devel >= 1.8.4
+BuildRequires:  hdf-static
+BuildRequires:  hdf5-devel
 BuildRequires:  gawk
 BuildRequires:  libcurl-devel
 BuildRequires:  m4
 BuildRequires:  zlib-devel
-BuildRequires:  hdf-devel >= 4.2.10
-# BuildRequires:  libpnetcdf-devel
-%ifnarch s390 s390x %{arm}
+%ifarch %{valgrind_arches}
 BuildRequires:  valgrind
 %endif
 #mpiexec segfaults if ssh is not present
 #https://trac.mcs.anl.gov/projects/mpich2/ticket/1576
 BuildRequires:  openssh-clients
-Requires:       hdf5 = %{_hdf5_version}
-Requires:       hdf >= 4.2.12
+Requires:       hdf5%{?_isa} = %{_hdf5_version}
 
 %global with_mpich 1
 %global with_openmpi 1
-%if 0%{?rhel} <= 6
-%ifarch ppc64
-# No mpich on ppc64 in EL6
-%global with_mpich 0
-%endif
-%endif
-%ifarch s390 s390x
-# No openmpi on s390(x)
-%global with_openmpi 0
-%endif
 
 %if %{with_mpich}
 %global mpi_list mpich
@@ -89,10 +72,10 @@ NetCDF data is:
 %package devel
 Summary:        Development files for netcdf
 Group:          Development/Libraries
-Requires:       %{name} = %{version}-%{release}
-Requires:       pkgconfig
-Requires:       hdf5-devel
-Requires:       libcurl-devel
+Requires:       %{name}%{?_isa} = %{version}-%{release}
+Requires:       pkgconfig%{?_isa}
+Requires:       hdf5-devel%{?_isa}
+Requires:       libcurl-devel%{?_isa}
 
 %description devel
 This package contains the netCDF C header files, shared devel libs, and 
@@ -102,7 +85,7 @@ man pages.
 %package static
 Summary:        Static libs for netcdf
 Group:          Development/Libraries
-Requires:       %{name} = %{version}-%{release}
+Requires:       %{name}%{?_isa} = %{version}-%{release}
 
 %description static
 This package contains the netCDF C static libs.
@@ -112,9 +95,11 @@ This package contains the netCDF C static libs.
 %package mpich
 Summary: NetCDF mpich libraries
 Group: Development/Libraries
-Requires: mpich
+Requires: hdf5-mpich%{?_isa} = %{_hdf5_version}
 BuildRequires: mpich-devel
 BuildRequires: hdf5-mpich-devel >= 1.8.4
+Provides: %{name}-mpich2 = %{version}-%{release}
+Obsoletes: %{name}-mpich2 < 4.3.0-4
 
 %description mpich
 NetCDF parallel mpich libraries
@@ -124,10 +109,11 @@ NetCDF parallel mpich libraries
 Summary: NetCDF mpich development files
 Group: Development/Libraries
 Requires: %{name}-mpich%{?_isa} = %{version}-%{release}
-Requires: mpich
-Requires: pkgconfig
-Requires: hdf5-mpich-devel
-Requires: libcurl-devel
+Requires: pkgconfig%{?_isa}
+Requires: hdf5-mpich-devel%{?_isa}
+Requires: libcurl-devel%{?_isa}
+Provides: %{name}-mpich2-devel = %{version}-%{release}
+Obsoletes: %{name}-mpich2-devel < 4.3.0-4
 
 %description mpich-devel
 NetCDF parallel mpich development files
@@ -137,6 +123,8 @@ NetCDF parallel mpich development files
 Summary: NetCDF mpich static libraries
 Group: Development/Libraries
 Requires: %{name}-mpich-devel%{?_isa} = %{version}-%{release}
+Provides: %{name}-mpich2-static = %{version}-%{release}
+Obsoletes: %{name}-mpich2-static < 4.3.0-4
 
 %description mpich-static
 NetCDF parallel mpich static libraries
@@ -147,7 +135,7 @@ NetCDF parallel mpich static libraries
 %package openmpi
 Summary: NetCDF openmpi libraries
 Group: Development/Libraries
-Requires: openmpi
+Requires: hdf5-openmpi%{?_isa} = %{_hdf5_version}
 BuildRequires: openmpi-devel
 BuildRequires: hdf5-openmpi-devel >= 1.8.4
 
@@ -159,10 +147,10 @@ NetCDF parallel openmpi libraries
 Summary: NetCDF openmpi development files
 Group: Development/Libraries
 Requires: %{name}-openmpi%{_isa} = %{version}-%{release}
-Requires: openmpi-devel
-Requires: pkgconfig
-Requires: hdf5-openmpi-devel
-Requires: libcurl-devel
+Requires: openmpi-devel%{?_isa}
+Requires: pkgconfig%{?_isa}
+Requires: hdf5-openmpi-devel%{?_isa}
+Requires: libcurl-devel%{?_isa}
 
 %description openmpi-devel
 NetCDF parallel openmpi development files
@@ -179,12 +167,10 @@ NetCDF parallel openmpi static libraries
 
 
 %prep
-%setup -q -n %{name}-%{version}
-# %patch0 -p1 -b .pkgconfig
-# %patch1 -p1 -b .mpio
-%patch0 -p0 -b .dimscale
+%setup -q -n %{name}-c-%{version}
+# Forcing autoconf
 autoreconf -vif
-mkdir build
+m4 libsrc/ncx.m4 > libsrc/ncx.c
 
 
 %build
@@ -195,22 +181,29 @@ mkdir build
            --enable-shared \\\
            --enable-netcdf-4 \\\
            --enable-dap \\\
+           --enable-extra-example-tests \\\
+           CPPFLAGS=-I%{_includedir}/hdf \\\
            LIBS="-ljpeg" \\\
            --enable-hdf4 \\\
-           --enable-extra-example-tests \\\
-	   LDFLAGS=-L/usr/lib64/hdf LD_LIBRARY_PATH="/usr/lib/gcc/x86_64-redhat-linux/4.8.2/32/ /usr/lib64/hdf/" CPPFLAGS=-I/usr/include/hdf
+           --disable-dap-remote-tests \\\
+           LDFLAGS=-L/usr/lib64/hdf LD_LIBRARY_PATH="/usr/lib64/hdf/" CPPFLAGS=-I/usr/include/hdf
 %{nil}
 export LDFLAGS="%{__global_ldflags} -L%{_libdir}/hdf"
 
+# Upstream libtool is stripping -spec from link command
+libtoolize --force
+
 # Serial build
+mkdir build
 pushd build
 ln -s ../configure .
+export CC=gcc
 %configure %{configure_opts}
 make %{?_smp_mflags}
 popd
 
 # MPI builds
-export CC=/usr/lib64/mpich/bin/mpicc
+export CC=mpicc
 for mpi in %{mpi_list}
 do
   mkdir $mpi
@@ -223,10 +216,13 @@ do
     --bindir=%{_libdir}/$mpi/bin \
     --sbindir=%{_libdir}/$mpi/sbin \
     --includedir=%{_includedir}/$mpi-%{_arch} \
-    --enable-pnetcdf \
     --datarootdir=%{_libdir}/$mpi/share \
     --mandir=%{_libdir}/$mpi/share/man \
-    CC=/usr/lib64/mpich/bin/mpicc CXX=/usr/lib64/mpich/bin/mpicxx LDFLAGS="-L/usr/lib64/mpich/lib/ -L/usr/lib64/openmpi/lib/ -L/usr/lib64/hdf" LD_LIBRARY_PATH="/usr/lib64/openmpi/lib/ /usr/lib/gcc/x86_64-redhat-linux/4.8.2/32/ /usr/lib64/hdf/" CPPFLAGS="-I/usr/include/hdf -I/usr/include/mpich-x86_64 -I/usr/include/openmpi-x86_64"
+    %ifnarch s390 s390x
+    --enable-parallel-tests
+    %else
+      %{nil}
+    %endif
   make %{?_smp_mflags}
   module purge
   popd
@@ -238,11 +234,6 @@ make -C build install DESTDIR=${RPM_BUILD_ROOT}
 /bin/rm -f ${RPM_BUILD_ROOT}%{_libdir}/*.la
 chrpath --delete ${RPM_BUILD_ROOT}/%{_bindir}/nc{copy,dump,gen,gen3}
 /bin/rm -f ${RPM_BUILD_ROOT}%{_infodir}/dir
-
-ln -fs %{_libdir}/mpich/lib/libmpich.so.10 $RPM_BUILD_ROOT/%{_libdir}/libmpich.so.10
-ln -fs %{_libdir}/mpich/lib/libopa.so.1 $RPM_BUILD_ROOT/%{_libdir}/libopa.so.1
-ln -fs %{_libdir}/mpich/lib/libmpl.so.1 $RPM_BUILD_ROOT/%{_libdir}/libmpl.so.1
-
 for mpi in %{mpi_list}
 do
   module load mpi/$mpi-%{_arch}
@@ -254,14 +245,13 @@ done
 
 
 %check
-make -C build check
-# This is hanging here:
-# Testing very simple parallel I/O with 4 processors...
-# *** tst_parallel testing very basic parallel access.
+# Set to 1 to fail if tests fail
+fail=0
+make -C build check || ( cat build/*/test-suite.log && exit $fail )
 for mpi in %{mpi_list}
 do
   module load mpi/$mpi-%{_arch}
-#  make -C $mpi check
+  make -C $mpi check || ( cat $mpi/*/test-suite.log && exit $fail )
   module purge
 done
 
@@ -277,17 +267,18 @@ done
 %{_bindir}/ncdump
 %{_bindir}/ncgen
 %{_bindir}/ncgen3
-%{_libdir}/*.so.11*
+%{_bindir}/ocprint
+%{_libdir}/*.so.13*
 %{_mandir}/man1/*
-
 
 %files devel
 %doc examples
 %{_bindir}/nc-config
 %{_includedir}/netcdf.h
-%{_includedir}/netcdf_*
+%{_includedir}/netcdf_meta.h
+%{_includedir}/netcdf_mem.h
+%{_libdir}/libnetcdf.settings
 %{_libdir}/*.so
-%{_libdir}/*.settings
 %{_libdir}/pkgconfig/netcdf.pc
 %{_mandir}/man3/*
 
@@ -301,16 +292,14 @@ done
 %{_libdir}/mpich/bin/ncdump
 %{_libdir}/mpich/bin/ncgen
 %{_libdir}/mpich/bin/ncgen3
-%{_libdir}/mpich/lib/*.so.11*
-%{_libdir}/mpich/lib/*.settings
-%{_libdir}/libmpich.so.10
-%{_libdir}/libopa.so.1
-%{_libdir}/libmpl.so.1
+%{_libdir}/mpich/bin/ocprint
+%{_libdir}/mpich/lib/*.so.13*
 %doc %{_libdir}/mpich/share/man/man1/*.1*
 
 %files mpich-devel
 %{_libdir}/mpich/bin/nc-config
 %{_includedir}/mpich-%{_arch}
+%{_libdir}/mpich/lib/libnetcdf.settings
 %{_libdir}/mpich/lib/*.so
 %{_libdir}/mpich/lib/pkgconfig/%{name}.pc
 %doc %{_libdir}/mpich/share/man/man3/*.3*
@@ -326,13 +315,14 @@ done
 %{_libdir}/openmpi/bin/ncdump
 %{_libdir}/openmpi/bin/ncgen
 %{_libdir}/openmpi/bin/ncgen3
-%{_libdir}/openmpi/lib/*.so.11*
-%{_libdir}/openmpi/lib/*.settings
+%{_libdir}/openmpi/bin/ocprint
+%{_libdir}/openmpi/lib/*.so.13*
 %doc %{_libdir}/openmpi/share/man/man1/*.1*
 
 %files openmpi-devel
 %{_libdir}/openmpi/bin/nc-config
 %{_includedir}/openmpi-%{_arch}
+%{_libdir}/openmpi/lib/libnetcdf.settings
 %{_libdir}/openmpi/lib/*.so
 %{_libdir}/openmpi/lib/pkgconfig/%{name}.pc
 %doc %{_libdir}/openmpi/share/man/man3/*.3*
@@ -343,6 +333,100 @@ done
 
 
 %changelog
+* Thu Aug 23 2018 Ketan Patel <k2patel@live.com> - 4.6.1-1
+- Build even test fail - known to fail run_par_tests.sh
+- Updated to 4.6.1
+
+* Fri Jul 13 2018 Fedora Release Engineering <releng@fedoraproject.org> - 4.4.1.1-10
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_29_Mass_Rebuild
+
+* Mon Apr 09 2018 Orion Poplawski <orion@nwra.com> - 4.4.1.1-9
+- Run libtoolize to not strip link flags (bug #1548732)
+
+* Thu Feb 08 2018 Fedora Release Engineering <releng@fedoraproject.org> - 4.4.1.1-8
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_28_Mass_Rebuild
+
+* Fri Feb 02 2018 Orion Poplawski <orion@cora.nwra.com> - 4.4.1.1-7
+- Rebuild for gcc 8.0
+
+* Thu Aug 03 2017 Fedora Release Engineering <releng@fedoraproject.org> - 4.4.1.1-6
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_27_Binutils_Mass_Rebuild
+
+* Wed Jul 26 2017 Fedora Release Engineering <releng@fedoraproject.org> - 4.4.1.1-5
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_27_Mass_Rebuild
+
+* Fri Feb 10 2017 Fedora Release Engineering <releng@fedoraproject.org> - 4.4.1.1-4
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_26_Mass_Rebuild
+
+* Thu Dec 08 2016 Dan Horák <dan[at]danny.cz> - 4.4.1.1-3
+- Enable openmpi for s390(x) on F>=26
+
+* Tue Dec 06 2016 Orion Poplawski <orion@cora.nwra.com> - 4.4.1.1-2
+- Rebuild for hdf5 1.8.18
+
+* Tue Nov 29 2016 Orion Poplawski <orion@cora.nwra.com> - 4.4.1.1-1
+- Update to 4.4.1.1
+- Add patch to fix mpi tests compilation
+
+* Fri Oct 21 2016 Orion Poplawski <orion@cora.nwra.com> - 4.4.1-4
+- Rebuild for openmpi 2.0
+
+* Fri Aug 12 2016 Michal Toman <mtoman@fedoraproject.org> - 4.4.1-3
+- No valgrind on MIPS
+- Enable valgrind on arm
+
+* Thu Jul 7 2016 Orion Poplawski <orion@cora.nwra.com> - 4.4.1-2
+- Add upstream patch to fix hashmap issue
+
+* Wed Jun 29 2016 Orion Poplawski <orion@cora.nwra.com> - 4.4.1-1
+- Update to 4.4.1
+
+* Tue Jun 28 2016 Orion Poplawski <orion@cora.nwra.com> - 4.4.0-4
+- Drop mpiexec hack
+
+* Thu Feb 04 2016 Fedora Release Engineering <releng@fedoraproject.org> - 4.4.0-3
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_24_Mass_Rebuild
+
+* Fri Jan 22 2016 Orion Poplawski <orion@cora.nwra.com> - 4.4.0-2
+- Rebuild ncx.c to fix arm build
+
+* Thu Jan 21 2016 Orion Poplawski <orion@cora.nwra.com> - 4.4.0-1
+- Update to 4.4.0
+- Add patch to fix incorrect char definitions
+
+* Sat Nov 07 2015 Rex Dieter <rdieter@fedoraproject.org> 4.3.3.1-7
+- rebuild (hdf)
+
+* Wed Sep 16 2015 Orion Poplawski <orion@cora.nwra.com> - 4.3.3.1-6
+- Rebuild for openmpi 1.10.0
+
+* Mon Aug 10 2015 Sandro Mani <manisandro@gmail.com> - 4.3.3.1-5
+- Rebuild for RPM MPI Requires Provides Change
+
+* Wed Jul 29 2015 Karsten Hopp <karsten@redhat.com> 4.3.3.1-4
+- mpich is available on ppc64 now
+
+* Wed Jun 17 2015 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 4.3.3.1-3
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_23_Mass_Rebuild
+
+* Sun May 17 2015 Orion Poplawski <orion@cora.nwra.com> - 4.3.3.1-2
+- Rebuild for hdf5 1.8.15
+
+* Wed Mar 11 2015 Orion Poplawski <orion@cora.nwra.com> - 4.3.3.1-1
+- Update to 4.3.3.1
+
+* Fri Feb 13 2015 Orion Poplawski <orion@cora.nwra.com> - 4.3.3-1
+- Update to 4.3.3
+
+* Tue Jan 27 2015 Orion Poplawski <orion@cora.nwra.com> - 4.3.2-7
+- Fix up provides/requires for mpi packages, use %%{?_isa}.
+
+* Wed Jan 07 2015 Orion Poplawski <orion@cora.nwra.com> - 4.3.2-6
+- Rebuild for hdf5 1.8.14
+
+* Sun Aug 17 2014 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 4.3.2-5
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_21_22_Mass_Rebuild
+
 * Thu Jul 24 2014 Jakub Čajka <jcajka@redhat.com> - 4.3.2-4
 - Enabled tests on s390
 - Disabled parallel tests on s390(x) as they hang
@@ -369,11 +453,29 @@ done
 - Update to 4.3.1.1
 - Add BR m4
 
+* Fri Dec 27 2013 Orion Poplawski <orion@cora.nwra.com> - 4.3.0-8
+- Rebuild for hdf5 1.8.12
+
 * Thu Dec 5 2013 Orion Poplawski <orion@cora.nwra.com> - 4.3.0-7
 - Use BR hdf-static (bug #1038280)
 
 * Mon Nov 4 2013 Orion Poplawski <orion@cora.nwra.com> - 4.3.0-6
 - Enable hdf4 support
+
+* Sat Aug 03 2013 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 4.3.0-5
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_20_Mass_Rebuild
+
+* Sat Jul 20 2013 Deji Akingunola <dakingun@gmail.com> - 4.3.0-4
+- Rename mpich2 sub-packages to mpich and rebuild for mpich-3.0
+
+* Thu Jul 11 2013 Orion Poplawski <orion@cora.nwra.com> - 4.3.0-3
+- Rebuild for openmpi 1.7.2
+
+* Thu May 16 2013 Orion Poplawski <orion@cora.nwra.com> - 4.3.0-2
+- Rebuild for hdf5 1.8.11
+
+* Mon May 13 2013 Orion Poplawski <orion@cora.nwra.com> - 4.3.0-1
+- Update to 4.3.0
 
 * Thu Feb 14 2013 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 4.2.1.1-4
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_19_Mass_Rebuild

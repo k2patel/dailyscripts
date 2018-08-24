@@ -13,8 +13,8 @@
 
 name:      perl-PDL
 summary:   PDL - Perl module
-version:   2.015
-release:   2
+version:   2.19
+release:   1
 vendor:    Chris Marshall
 packager:  Arix International <cpan2rpm@arix.com>
 license:   Artistic
@@ -23,7 +23,7 @@ url:       http://www.cpan.org
 buildroot: %{_tmppath}/%{name}-%{version}-%(id -u -n)
 buildarch: x86_64
 prefix:    %(echo %{_prefix})
-source:    http://search.cpan.org//CPAN/authors/id/C/CH/CHM/PDL-2.015.tar.gz
+source:    http://search.cpan.org//CPAN/authors/id/C/CH/CHM/PDL-2.019.tar.gz
 
 %description
 None.
@@ -79,5 +79,8 @@ make test
 [ "%{buildroot}" != "/" ] && rm -rf %{buildroot}
 
 %changelog
+* Thu Aug 23 2018 Ketan Patel <k2patel@live.com> - 2.019-1
+- Update to 2.0.19
+
 * Wed Jan 20 2016 k2patel@live.com
 - Initial build.
