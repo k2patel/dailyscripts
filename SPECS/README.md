@@ -18,6 +18,9 @@
 - netcdf - 4.4.1 -> 4.6.1
   * https://www.unidata.ucar.edu/software/netcdf/docs/RELEASE_NOTES.html
 
+- netcdf-fortran 4.4.4
+  * Newly Introduced to support ncview
+
 - netcdf-perl - 1.2.4
   * Unidata's NetCDF Perl package is no longer being actively maintained. Unidata will continue to provide support for netCDF Perl.
   * This is mark deprecated and soon removed if you use perl script for NetCDF please start moving to new programming language or alternate method.
@@ -68,5 +71,17 @@
 - ncview
   * No Change
 
-- perl-PDL 2.15.0 - 2.19.0
+- perl-PDL 2.15.0 -> 2.19.0
   * https://metacpan.org/changes/distribution/PDL
+  
+- perl-PDL-NetCDF
+  * No Change
+  
+- wgrib
+  * No Change
+  
+- wgrib2 - 2.0.5 -> 2.0.7
+  * http://ftp.cpc.ncep.noaa.gov/wd51we/wgrib2/Changes
+  
+- netcdf4-python - 1.2.7 -> 1.4.1
+  * https://github.com/Unidata/netcdf4-python/blob/master/Changelog
