@@ -1,0 +1,22 @@
+#! /usr/bin/env bash
+#
+# Check if mount point is active, if not mount
+#
+# Ketan Patel <k2patel@live.com>
+
+# Redirect log to logger
+exec 1> >(logger -t $(basename $0)) 2>&1
+
+# Create list of mount point, space saperated
+mountlist=('/data')
+
+# Usually do not require to change.
+for list in ${mountlist[@]}
+do
+  if grep -qs "${list}" /proc/mounts
+  then
+    echo "${list} mount is good"
+  else
+    /usr/bin/mount ${list}
+  fi
+done
