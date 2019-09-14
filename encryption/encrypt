@@ -1,13 +1,13 @@
 #!/bin/bash
 
 if [ $# -lt 1 ];then
-	echo "Usage : $0 <fileinput> <fileoutput>" && exit
+        echo "Usage : $0 <fileinput> <fileoutput>" && exit
 fi
 
 openssl=$(which openssl)
 
-if ${openssl} enc -camellia-256-ecb -a -salt -in ${1} -out ${2}; then
-	echo "Successfully converted"
+if ${openssl} enc -aes-256-cfb8 -a -salt -pbkdf2 -in ${1} -out ${2}; then
+        echo "Successfully converted"
 else
-	echo "Failed Conversion"
+        echo "Failed Conversion"
 fi
