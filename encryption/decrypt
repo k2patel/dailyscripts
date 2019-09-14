@@ -4,6 +4,6 @@ if [ $# -lt 2 ]; then
 	echo "Usage : $0 <input> <output>" && exit 1
 fi
 
-if openssl des -d -a -camellia-256-ecb -in "${1}" -out "${2}"; then
+if openssl des -d -a -aes-256-cfb8 -pbkdf2 -in "${1}" -out "${2}"; then
 	echo "Successfully Converted"
 fi
