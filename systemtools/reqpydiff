@@ -11,11 +11,11 @@ def main(argv):
   try:
     opts, args = getopt.getopt(argv, 'hf:', ['rfile='])
   except getopt.GetoptError:
-    print("localpypi -f <location of requirements.txt>")
+    print("reqpydiff -f <location of requirements.txt>")
     sys.exit(2)
   for opt, arg in opts:
     if opt == '-h':
-      print("localpypi -f <location of requirements.txt>")
+      print("reqpydiff -f <location of requirements.txt>")
       sys.exit()
     elif opt in ('-f', '--rfile'):
       req_file = arg
