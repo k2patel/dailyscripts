@@ -1,25 +1,12 @@
 #!/usr/bin/env python3
 # License: MIT
 # Author: k2patel <k2patel@live.com>
-import sys, getopt
+import sys
+import argparse
 import subprocess
 import json
 
-def main(argv):
-  # Initialize and handle options
-  req_file = ''
-  try:
-    opts, args = getopt.getopt(argv, 'hf:', ['rfile='])
-  except getopt.GetoptError:
-    print("reqpydiff -f <location of requirements.txt>")
-    sys.exit(2)
-  for opt, arg in opts:
-    if opt == '-h':
-      print("reqpydiff -f <location of requirements.txt>")
-      sys.exit()
-    elif opt in ('-f', '--rfile'):
-      req_file = arg
-      
+def main(req_file):     
   # Create array of local modules
   cmd = '/usr/local/bin/pip3 list --user --format json --no-index'
   output = subprocess.check_output(cmd, shell=True)
@@ -30,14 +17,23 @@ def main(argv):
     pylocal.append(obj['name'])
 
   # Read requirements.txt file and compare if modulee exists in local
-  with open(req_file, 'rb') as fin:
-    content = fin.readlines()
-    fin.close()
+  try: 
+    with open(req_file, 'rb') as fin:
+      content = fin.readlines()
+      fin.close()
 
-  for line in content:
-    temp = line.decode("utf-8").rstrip().lstrip().split('==')
-    if temp[0] not in pylocal:
-      print(line.decode("utf-8").rstrip().lstrip().replace('==', ': '))
+    for line in content:
+      temp = line.decode("utf-8").rstrip().lstrip().split('==')
+      if temp[0] not in pylocal:
+        print(line.decode("utf-8").rstrip().lstrip().replace('==', ': '))
+  except IOError:
+    print('File : ' + req_file + ' : not accessible')
 
 if __name__ == "__main__":
-   main(sys.argv[1:])
+  # Initialize and handle options
+  req_file = ''
+  parser = argparse.ArgumentParser(prog='reqpydiff', description='Create difference between installed module and required module')
+  parser.add_argument('-f', '--file', dest='req_file', type=str, help='location of requirements.txt', default='requirements.txt')
+  
+  args = parser.parse_args()
+  main(args.req_file)
