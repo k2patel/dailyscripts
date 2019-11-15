@@ -1,0 +1,5 @@
+{
+    "system_list": "/Users/kpb/admin-scripts/systems",
+    "system_user": "kpbsu",
+    "ssh_keyfile": "/Users/kpb/.ssh/id_rsa"
+}

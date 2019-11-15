@@ -1,0 +1,30 @@
+#!/usr/bin/env python3
+ 
+from dateutil import rrule
+import sys, getopt
+import datetime
+ 
+#start_date = datetime.datetime.strptime('5/20/2019', '%m/%d/%Y')
+#end_date = datetime.datetime.strptime('7/14/2019', '%m/%d/%Y')
+ 
+def main(argv):
+   start_date = ''
+   end_date = ''
+   try:
+      opts, args = getopt.getopt(argv,"hs:e:",["sdate=","edate="])
+   except getopt.GetoptError:
+      print ('courselength -s <start_date> -e <end_date>')
+      sys.exit(2)
+   for opt, arg in opts:
+      if opt == '-h':
+         print ('courselength -s <start date> -e <end date>')
+         sys.exit()
+      elif opt in ("-s", "--sdate"):
+         start_date = datetime.datetime.strptime(arg, '%m/%d/%Y')
+      elif opt in ("-e", "--edate"):
+         end_date = datetime.datetime.strptime(arg, '%m/%d/%Y')
+   weeks=rrule.rrule(rrule.WEEKLY, dtstart=start_date, until=end_date)
+   print ('This course is: ', weeks.count(), ' Week Long')
+ 
+if __name__ == "__main__":
+   main(sys.argv[1:])

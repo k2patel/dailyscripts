@@ -1,0 +1,44 @@
+#!/usr/local/bin/python
+# Script to parse values from the system file.
+
+import json
+import sys, getopt
+
+
+def loadconf(configFile):
+    with open(configFile, 'r') as config_file:
+        config_data = json.load(config_file)
+    return config_data
+
+def runProg():
+    fileHandle = open(config_data['system_list'], 'r')
+    for line in fileHandle:
+        fields = line.split('|')
+
+        print(fields[0]) # prints the first fields value
+        print(fields[1]) # prints the second fields value
+        
+    fileHandle.close()
+    return
+
+def main(argv):
+   inputfile = ''
+   outputfile = ''
+   try:
+      opts, args = getopt.getopt(argv,"hi:o:",["ifile=","ofile="])
+   except getopt.GetoptError:
+      print sys.argv[0], ' -i <inputfile> -o <outputfile>'
+      sys.exit(2)
+   for opt, arg in opts:
+      if opt == '-h':
+         print 'test.py -i <inputfile> -o <outputfile>'
+         sys.exit()
+      elif opt in ("-i", "--ifile"):
+         inputfile = arg
+      elif opt in ("-o", "--ofile"):
+         outputfile = arg
+   print 'Input file is "', inputfile
+   print 'Output file is "', outputfile
+
+if __name__ == "__main__":
+   main(sys.argv[1:])
