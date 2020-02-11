@@ -1,0 +1,32 @@
+#!/bin/env python3
+# License: MIT
+# Author: Ketan Patel <patelkr@ornl.gov>
+
+import pkg_resources
+import argparse
+import sys
+
+def main(modname, modver):
+  try:
+    if pkg_resources.get_distribution(modname).version == modver:
+      sys.exit(0)
+    else:
+      sys.exit(1)
+  except pkg_resources.DistributionNotFound:
+    sys.exit(1)
+
+if __name__ == "__main__":
+  # Initialize and handle options
+  modname = ''
+  parser = argparse.ArgumentParser(prog='pymodcheck', description='Check if module installed and version as expected')
+  maingroup = parser.add_argument_group(title='required')
+  maingroup.add_argument('-m', '--mod', dest='modname', type=str, help='provide name of module', default='')
+  maingroup.add_argument('-v', '--ver', dest='modver', type=str, help='version of module', default='')
+  
+  if len(sys.argv[1:])==0:
+    parser.print_help()
+    # parser.print_usage() # for just the usage line
+    parser.exit()
+
+  args = parser.parse_args()
+  main(args.modname, args.modver)
