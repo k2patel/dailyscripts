@@ -1,6 +1,6 @@
 Name:           netcdf-perl
 Version:        1.2.4
-Release:        2%{?dist}
+Release:        20%{?dist}
 Summary:        Perl extension module for scientific data access via the netCDF API
 
 Group:          Development/Libraries
@@ -71,6 +71,9 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Sun Aug 02 2020 Ketan Patel <k2patel@live.com> - 1.2.4-20
+- Upgrading to new netcdf and other packages
+
 * Wed Jun 03 2015 Jitka Plesnikova <jplesnik@redhat.com> - 1.2.4-19
 - Perl 5.22 rebuild
 

@@ -1,5 +1,5 @@
 Name:      libgeotiff
-Version:   1.4.2
+Version:   1.4.3
 Release:   1%{?dist}
 Summary:   GeoTIFF format library
 Group:     System Environment/Libraries
@@ -112,7 +112,10 @@ rm -rf %{buildroot}
 %{_libdir}/pkgconfig/%{name}.pc
 
 %changelog
-* Fri Aug 10 2018 Ketan Patel <k2patel@live.com> - 1.4.2-1
+* Mon Aug 03 2020 Ketan Patel <patelkr@ornl.gov> - 1.6.0-1
+- Updating to 1.6.0
+
+* Fri Aug 10 2018 Ketan Patel <patelkr@ornl.gov> - 1.4.2-1
 - Updating 1.4.2
 - Removing makegeo as suggested by Even Rouault / 2016-08-16 # Check ChangeLog
 - Fixing man pages

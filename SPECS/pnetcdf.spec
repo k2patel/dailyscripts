@@ -1,21 +1,47 @@
-%define mpiimpl mpich
-%define mpidir %_libdir/%mpiimpl
+%global macrosdir %(d=%{_rpmconfigdir}/macros.d; [ -d $d ] || d=%{_sysconfdir}/rpm; echo $d)
 
-%define sover 0
+# Patch version?
+%global snaprel %{nil}
 
+# mpi names
+%global mpich mpich-3.2
+%global openmpi openmpi3
+
+# NOTE:  Try not to release new versions to released versions of Fedora
+# You need to recompile all users of HDF5 for each version change
 Name: pnetcdf
-Version: 1.7.0
-Release: el7
+Version: 1.12.1
+Release: 1%{?dist}
 Summary: Parallel netCDF: A High Performance API for NetCDF File Access
 License: Open source
 Group: File tools
-Url: http://trac.mcs.anl.gov/projects/parallel-netcdf
-Packager: Ketan Patel <k2patel@live.com>
+Url: http://cucis.ece.northwestern.edu/projects/PNETCDF/index.html
+Packager: Ketan Patel <patelkr@ornl.gov>
 
-Source: %name-%version.tar.gz
+Source0: https://parallel-netcdf.github.io/Release/pnetcdf-%{version}.tar.gz
 
-BuildRequires: %mpiimpl-devel flex gcc-gfortran
+BuildRequires: flex gcc-gfortran
 BuildRequires: ghostscript texlive-latex
+
+%global with_mpich 1
+%global with_openmpi 1
+%if 0%{?rhel} <= 6
+%ifarch ppc64
+% No mpich2 on ppc64 in EL6
+%global with_mpich 0
+%endif
+%endif
+%ifarch s390 s390x
+# No openmpi on s390(x)
+%global with_openmpi 0
+%endif
+
+%if %{with_mpich}
+%global mpi_list %{mpich}
+%endif
+%if %{with_openmpi}
+%global mpi_list %{?mpi_list} %{openmpi}
+%endif
 
 %description
 Parallel netCDF (PnetCDF) is a library providing high-performance I/O
@@ -27,11 +53,12 @@ difficult to achieve high I/O performance. By making some small changes
 to the API specified by NetCDF, we can use MPI-IO and its collective
 operations.
 
-%package -n lib%name
+%if %{with_mpich}
+%package -n lib%name-mpich
 Summary: Shared library of Parallel netCDF
 Group: System/Libraries
 
-%description -n lib%name
+%description -n lib%name-mpich
 Parallel netCDF (PnetCDF) is a library providing high-performance I/O
 while still maintaining file-format compatibility with Unidata's NetCDF.
 
@@ -43,13 +70,13 @@ operations.
 
 This package contains shared library of Parallel netCDF.
 
-%package -n lib%name-devel
+%package -n lib%name-mpich-devel
 Summary: Development files of Parallel netCDF
 Group: Development/Other
-Requires: lib%name = %version-%release
-Requires: %mpiimpl-devel
+Requires: lib%name-mpich = %version-%release
+Requires: %{mpich}-devel
 
-%description -n lib%name-devel
+%description -n lib%name-mpich-devel
 Parallel netCDF (PnetCDF) is a library providing high-performance I/O
 while still maintaining file-format compatibility with Unidata's NetCDF.
 
@@ -61,11 +88,11 @@ operations.
 
 This package contains development files of Parallel netCDF.
 
-%package -n lib%name-devel-doc
+%package -n lib%name-mpich-devel-doc
 Summary: Documentation and examples for Parallel netCDF
 Group: Development/Documentation
 
-%description -n lib%name-devel-doc
+%description -n lib%name-mpich-devel-doc
 Parallel netCDF (PnetCDF) is a library providing high-performance I/O
 while still maintaining file-format compatibility with Unidata's NetCDF.
 
@@ -78,14 +105,13 @@ operations.
 This package contains development documentation and examples for
 Parallel netCDF.
 
-%package -n lib%name-debug
+%package -n lib%name-mpich-debug
 Summary: Debug package for Parallel netCDF
 Group: Debug
-Requires: lib%name-devel-doc
-Requires: lib%name-devel
-Requires: %mpiimpl-debuginfo
+Requires: lib%name-mpich-devel-doc
+Requires: lib%name-mpich-devel
 
-%description -n lib%name-debug
+%description -n lib%name-mpich-debug
 Parallel netCDF (PnetCDF) is a library providing high-performance I/O
 while still maintaining file-format compatibility with Unidata's NetCDF.
 
@@ -96,52 +122,182 @@ to the API specified by NetCDF, we can use MPI-IO and its collective
 operations.
 
 This package contains debug information for Parallel netCDF.
+%endif
+
+%if %{with_openmpi}
+%package -n lib%name-openmpi
+Summary: Shared library of Parallel netCDF
+Group: System/Libraries
+
+%description -n lib%name-openmpi
+Parallel netCDF (PnetCDF) is a library providing high-performance I/O
+while still maintaining file-format compatibility with Unidata's NetCDF.
+
+NetCDF gives scientific programmers a space-efficient and portable means
+for storing data. However, it does so in a serial manner, making it
+difficult to achieve high I/O performance. By making some small changes
+to the API specified by NetCDF, we can use MPI-IO and its collective
+operations.
+
+This package contains shared library of Parallel netCDF.
+
+%package -n lib%name-openmpi-devel
+Summary: Development files of Parallel netCDF
+Group: Development/Other
+Requires: lib%name-openmpi = %version-%release
+Requires: %{openmpi}-devel
+
+%description -n lib%name-openmpi-devel
+Parallel netCDF (PnetCDF) is a library providing high-performance I/O
+while still maintaining file-format compatibility with Unidata's NetCDF.
+
+NetCDF gives scientific programmers a space-efficient and portable means
+for storing data. However, it does so in a serial manner, making it
+difficult to achieve high I/O performance. By making some small changes
+to the API specified by NetCDF, we can use MPI-IO and its collective
+operations.
+
+This package contains development files of Parallel netCDF.
+
+%package -n lib%name-openmpi-devel-doc
+Summary: Documentation and examples for Parallel netCDF
+Group: Development/Documentation
+
+%description -n lib%name-openmpi-devel-doc
+Parallel netCDF (PnetCDF) is a library providing high-performance I/O
+while still maintaining file-format compatibility with Unidata's NetCDF.
+
+NetCDF gives scientific programmers a space-efficient and portable means
+for storing data. However, it does so in a serial manner, making it
+difficult to achieve high I/O performance. By making some small changes
+to the API specified by NetCDF, we can use MPI-IO and its collective
+operations.
+
+This package contains development documentation and examples for
+Parallel netCDF.
+
+%package -n lib%name-openmpi-debug
+Summary: Debug package for Parallel netCDF
+Group: Debug
+Requires: lib%name-openmpi-devel-doc
+Requires: lib%name-openmpi-devel
+
+%description -n lib%name-openmpi-debug
+Parallel netCDF (PnetCDF) is a library providing high-performance I/O
+while still maintaining file-format compatibility with Unidata's NetCDF.
+
+NetCDF gives scientific programmers a space-efficient and portable means
+for storing data. However, it does so in a serial manner, making it
+difficult to achieve high I/O performance. By making some small changes
+to the API specified by NetCDF, we can use MPI-IO and its collective
+operations.
+
+This package contains debug information for Parallel netCDF.
+%endif
+
 
 %prep
-%setup
+%setup -q
 rm -fR autom4te.cache
 
+
 %build
-autoreconf -i
-%configure \
-        --build=x86_64-redhat-linux-gnu --host=x86_64-redhat-linux-gnu \
-        --libdir=%{_libdir} \
-	--with-mpi=%mpidir \
-	--enable-mpi-io-test \
-	--enable-fortran \
-	--enable-strict
+#Do out of tree builds
+%global _configure ../configure
+#Common configure options
+%global configure_opts \\\
+  --enable-mpi-io-test \\\
+  --enable-fortran \\\
+  --enable-strict \\\
+  --enable-shared \\\
+%{nil}
 
-make 
+#MPI builds
+export CC=mpicc
+export CXX=mpicxx
+export F9X=mpif90
+# Work around a bug in mpich when hostname is not resovable
+export RUNPARALLEL="mpiexec -np 4 -host localhost"
+for mpi in %{mpi_list}
+do
+  mkdir $mpi
+  pushd $mpi
+  module load mpi/$mpi-%{_arch}
+  ln -s ../configure .
+  %configure \
+    %{configure_opts} \
+    --with-mpi=%{_libdir}/$mpi \
+    --libdir=%{_libdir}/$mpi/lib \
+    --bindir=%{_libdir}/$mpi/bin \
+    --sbindir=%{_libdir}/$mpi/sbin \
+    --includedir=%{_includedir}/$mpi-%{_arch} \
+    --datarootdir=%{_libdir}/$mpi/share \
+    --mandir=%{_libdir}/$mpi/share/man \
+    LDFLAGS="-L/usr/lib64/$mpi/lib/ -L/usr/lib64/$mpi/lib/" LD_LIBRARY_PATH="/usr/lib64/$mpi/lib/ /usr/lib/gcc/x86_64-redhat-linux/4.8.2/32/"
+  make %{?_smp_mflags}
+  module purge
+  popd
+done
 
-%{_libdir}/openmpi/bin/mpif77 -shared -Wl,-soname=libpnetcdf.so.1 -o libpnetcdf.so.%{version}
 
 %install
-%ifarch x86_64
-LIB_SUFFIX=64
+for mpi in %{mpi_list}
+do
+  %ifarch x86_64
+  LIB_SUFFIX=64
+  %endif
+  module load mpi/$mpi-%{_arch}
+  make -C $mpi install DESTDIR=${RPM_BUILD_ROOT}
+  rm $RPM_BUILD_ROOT/%{_libdir}/$mpi/lib/*.la
+  module purge
+done
+
+%post -p /sbin/ldconfig
+
+%postun -p /sbin/ldconfig
+
+%if %{with_mpich}
+%files -n lib%name-mpich
+%{_libdir}/%{mpich}/bin/*
+%{_libdir}/%{mpich}/share/man/man1/*
+%{_libdir}/%{mpich}/lib/*.a
+%{_libdir}/%{mpich}/lib/*.so*
+
+%files -n lib%name-mpich-devel
+%{_includedir}/%{mpich}-%{_arch}
+%{_libdir}/%{mpich}/share/man/man3/*
+
+%files -n lib%name-mpich-debug
+/usr/lib/debug/usr/lib64/%{mpich}/bin/*
+
+%files -n lib%name-mpich-devel-doc
+%{_libdir}/%{mpich}/lib/pkgconfig/*.pc
 %endif
-make install prefix=%{buildroot}/usr/
 
-mkdir %{buildroot}/usr/share/
-mv %{buildroot}/usr/man %{buildroot}/usr/share/ 
+%if %{with_openmpi}
+%files -n lib%name-openmpi
+%{_libdir}/%{openmpi}/bin/*
+%{_libdir}/%{openmpi}/share/man/man1/*
+%{_libdir}/%{openmpi}/lib/*.a
+%{_libdir}/%{openmpi}/lib/*.so*
 
-%files
-%_bindir/*
-%_mandir/man1/*
+%files -n lib%name-openmpi-devel
+%{_includedir}/%{openmpi}-%{_arch}
+%{_libdir}/%{openmpi}/share/man/man3/*
 
-%files -n lib%name
-/usr/lib/*.a
+%files -n lib%name-openmpi-debug
+/usr/lib/debug/usr/lib64/%{openmpi}/bin/*
 
-%files -n lib%name-devel
-%_includedir/*
-%_mandir/man3/*
+%files -n lib%name-openmpi-devel-doc
+%{_libdir}/%{openmpi}/lib/pkgconfig/*.pc
+%endif
 
-%files -n lib%name-debug
-/usr/lib/debug/*
-/usr/src/*
 
-%files -n lib%name-devel-doc
-%doc doc/*.txt examples
-/usr/lib/pkgconfig/*.pc
+%changelog
+* Thu Jul 30 2020 Ketan Patel <k2patel@live.com> 1.12.1-1
+- Saperated mpich and openmpi package
+- Using mpich-3.2 and openmpi3
+- Package name change
 
 %changelog
 * Wed Jul 09 2014 Eugeny A. Rostovtsev (REAL) <real at altlinux.org> 1.5.0-alt2
@@ -158,4 +314,3 @@ mv %{buildroot}/usr/man %{buildroot}/usr/share/
 
 * Fri Sep 14 2012 Eugeny A. Rostovtsev (REAL) <real at altlinux.org> 1.3.0-alt1
 - Initial build for Sisyphus
-

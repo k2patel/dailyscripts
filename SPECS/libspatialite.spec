@@ -42,7 +42,7 @@
 
 Name:      libspatialite
 Version:   4.3.0a
-Release:   10%{?dist}
+Release:   12%{?dist}
 Summary:   Enables SQLite to support spatial data
 Group:     System Environment/Libraries
 License:   MPLv1.1 or GPLv2+ or LGPLv2+
@@ -135,6 +135,9 @@ make check V=1
 %{_libdir}/pkgconfig/spatialite.pc
 
 %changelog
+* Mon Aug 03 2020 Ketan Patel <k2patel@live.com> - 4.3.0a-12
+- Rebuilding with new library
+
 * Thu Sep 17 2015 Volker Froehlich <volker27@gmx.at> - 4.3.0a-1
 - New upstream release
 

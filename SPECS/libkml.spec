@@ -1,6 +1,6 @@
 Name:           libkml
 Version:        1.3.0
-Release:        14%{?dist}
+Release:        3%{?dist}
 Summary:        Reference implementation of OGC KML 2.2
 
 License:        BSD
@@ -14,32 +14,19 @@ Patch2:         0003-Fix-python-tests.patch
 Patch3:         0004-Correctly-build-and-run-java-test.patch
 # Fix a fragile test failing on i686
 Patch4:         fragile_test.patch
-# Don't bytecompile python sources as part of build process, leave it to rpmbuild
-Patch5:         libkml_dont-bytecompile.patch
-# Add crypt.h which was removed from Fedora minizip package (see #1424609)
-Patch6:         libkml_crypth.patch
 
 BuildRequires:  cmake
 BuildRequires:  curl-devel
 BuildRequires:  boost-devel
 BuildRequires:  expat-devel
 BuildRequires:  gtest-devel
-BuildRequires:  gcc-c++
 BuildRequires:  java-devel
 BuildRequires:  junit
-BuildRequires:  make
 BuildRequires:  minizip-devel
-%if 0%{?fedora} || 0%{?rhel} > 7
 BuildRequires:  python2-devel
-BuildRequires:  python3-devel
-%else
-BuildRequires:  python-devel
-%endif
 BuildRequires:  swig
 BuildRequires:  uriparser-devel
 BuildRequires:  zlib-devel
-
-Provides:       bundled(minizip) = 1.2.9
 
 %global __requires_exclude_from ^%{_docdir}/.*$
 %global __provides_exclude_from ^%{python2_sitearch}/.*\\.so$
@@ -52,21 +39,12 @@ Earth, as well as several utility libraries for working with other formats.
 
 
 %package -n python2-%{name}
-Summary:        Python 2 bindings for %{name}
+Summary:        Python bindings for %{name}
 Requires:       %{name}%{?_isa} = %{version}-%{release}
 %{?python_provide:%python_provide python2-%{name}}
 
 %description -n python2-%{name}
-The python2-%{name} package contains Python 2 bindings for %{name}.
-
-
-%package -n python3-%{name}
-Summary:        Python 3 bindings for %{name}
-Requires:       %{name}%{?_isa} = %{version}-%{release}
-%{?python_provide:%python_provide python%{python3_pkgversion}-%{name}}
-
-%description -n python3-%{name}
-The python3-%{name} package contains Python 3 bindings for %{name}.
+The python2-%{name} package contains Python bindings for %{name}.
 
 
 %package java
@@ -89,57 +67,33 @@ developing applications that use %{name}.
 
 
 %prep
-%autosetup -p1
+%setup -q
+%patch0 -p1
+%patch1 -p1
+%patch2 -p1
+%patch3 -p1
+%patch4 -p1
 
+sed -i 's/find_package(ZLIB 1.2.8)/find_package(ZLIB)/' CMakeLists.txt
 
 %build
-mkdir build_py2
-pushd build_py2
-%ifarch armv7hl
-%define awtlib -DJAVA_AWT_LIBRARY=`find /usr/lib/jvm/ -name libjawt.so | grep jre/lib/arm \`
-%endif
 %cmake -DWITH_SWIG=ON -DWITH_PYTHON=ON -DWITH_JAVA=ON \
   -DJNI_INSTALL_DIR=%{_libdir}/%{name} \
   -DCMAKE_INSTALL_DIR=%{_libdir}/cmake/%{name} \
   -DINCLUDE_INSTALL_DIR=%{_includedir}/kml \
-  -DPYTHON_LIBRARY=%{_libdir}/libpython%{python2_version}.so \
-  -DPYTHON_INCLUDE_DIR=%{_includedir}/python%{python2_version}/ \
-  -DPYTHON_INSTALL_DIR=%{python2_sitearch} \
-  %{?awtlib} \
   -DBUILD_TESTING=ON \
   -DBUILD_EXAMPLES=ON \
-  ..
-%make_build
-popd
-
-mkdir build_py3
-pushd build_py3
-%cmake -DWITH_SWIG=ON -DWITH_PYTHON=ON -DWITH_JAVA=OFF \
-  -DJNI_INSTALL_DIR=%{_libdir}/%{name} \
-  -DCMAKE_INSTALL_DIR=%{_libdir}/cmake/%{name} \
-  -DINCLUDE_INSTALL_DIR=%{_includedir}/kml \
-  -DPYTHON_LIBRARY=%{_libdir}/libpython%{python3_version}m.so \
-  -DPYTHON_INCLUDE_DIR=%{_includedir}/python%{python3_version}m/ \
-  -DPYTHON_INSTALL_DIR=%{python3_sitearch} \
-  -DBUILD_TESTING=ON \
-  -DBUILD_EXAMPLES=OFF \
-  ..
-%make_build
-popd
+  -DJAVA_AWT_LIBRARY=%{_libdir}/jvm/java/include \
+  -DJAVA_JVM_LIBRARY=%{_libdir}/jvm/java/lib 
+make %{?_smp_mflags}
 
 
 %install
-%make_install -C build_py2
-%make_install -C build_py3
+%make_install
 
 
 %check
-pushd build_py2
 ctest -V
-popd
-pushd build_py3
-ctest -V
-popd
 
 
 %post -p /sbin/ldconfig
@@ -156,11 +110,6 @@ popd
 %{python2_sitearch}/*.so
 %{python2_sitearch}/*.py*
 
-%files -n python3-%{name}
-%{python3_sitearch}/*.so
-%{python3_sitearch}/*.py
-%{python3_sitearch}/__pycache__/*.pyc
-
 %files java
 %{_javadir}/LibKML.jar
 %{_libdir}/%{name}/
@@ -173,40 +122,6 @@ popd
 %{_libdir}/cmake/%{name}/
 
 %changelog
-* Fri Jul 13 2018 Fedora Release Engineering <releng@fedoraproject.org> - 1.3.0-14
-- Rebuilt for https://fedoraproject.org/wiki/Fedora_29_Mass_Rebuild
-
-* Tue Jun 19 2018 Miro Hrončok <mhroncok@redhat.com> - 1.3.0-13
-- Rebuilt for Python 3.7
-
-* Tue Jun 19 2018 Sandro Mani <manisandro@gmail.com> - 1.3.0-12
-- Locally add crypt.h from minizip, which was removed in minizip-devel (see #1424609)
-
-* Tue Jun 19 2018 Miro Hrončok <mhroncok@redhat.com> - 1.3.0-11
-- Rebuilt for Python 3.7
-
-* Sun Feb 18 2018 Sandro Mani <manisandro@gmail.com> - 1.3.0-10
-- Add missing BR: gcc-c++, make
-
-* Wed Feb 07 2018 Fedora Release Engineering <releng@fedoraproject.org> - 1.3.0-9
-- Rebuilt for https://fedoraproject.org/wiki/Fedora_28_Mass_Rebuild
-
-* Mon Aug 07 2017 Sandro Mani <manisandro@gmail.com> - 1.3.0-8
-- Workaround armv7hl FTBFS
-- Add python3 bindings
-
-* Thu Aug 03 2017 Fedora Release Engineering <releng@fedoraproject.org> - 1.3.0-7
-- Rebuilt for https://fedoraproject.org/wiki/Fedora_27_Binutils_Mass_Rebuild
-
-* Wed Jul 26 2017 Fedora Release Engineering <releng@fedoraproject.org> - 1.3.0-6
-- Rebuilt for https://fedoraproject.org/wiki/Fedora_27_Mass_Rebuild
-
-* Tue Jul 18 2017 Jonathan Wakely <jwakely@redhat.com> - 1.3.0-5
-- Rebuilt for Boost 1.64
-
-* Fri Feb 10 2017 Fedora Release Engineering <releng@fedoraproject.org> - 1.3.0-4
-- Rebuilt for https://fedoraproject.org/wiki/Fedora_26_Mass_Rebuild
-
 * Tue Jul 19 2016 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 1.3.0-3
 - https://fedoraproject.org/wiki/Changes/Automatic_Provides_for_Python_RPM_Packages
 

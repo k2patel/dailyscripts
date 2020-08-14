@@ -1,12 +1,12 @@
 Name:           netcdf
-Version:        4.6.1
+Version:        4.7.4
 Release:        1%{?dist}
 Summary:        Libraries for the Unidata network Common Data Form
 
 Group:          Applications/Engineering
 License:        NetCDF
 URL:            http://www.unidata.ucar.edu/software/netcdf/
-Source0:        https://github.com/Unidata/netcdf-c/archive/v%{version}.tar.gz#/%{name}-%{version}.tar.gz
+Source0:        https://github.com/Unidata/netcdf-c/archive/v%{version}.tar.gz#/%{name}-c-%{version}.tar.gz
 # Add missing #include "err_macros.h"
 # https://github.com/Unidata/netcdf-c/pull/333
 
@@ -30,11 +30,15 @@ Requires:       hdf5%{?_isa} = %{_hdf5_version}
 %global with_mpich 1
 %global with_openmpi 1
 
+# mpi names
+%global mpich mpich-3.2
+%global openmpi openmpi3
+
 %if %{with_mpich}
-%global mpi_list mpich
+%global mpi_list %{mpich}
 %endif
 %if %{with_openmpi}
-%global mpi_list %{?mpi_list} openmpi
+%global mpi_list %{?mpi_list} %{openmpi}
 %endif
 
 %description
@@ -96,10 +100,10 @@ This package contains the netCDF C static libs.
 Summary: NetCDF mpich libraries
 Group: Development/Libraries
 Requires: hdf5-mpich%{?_isa} = %{_hdf5_version}
-BuildRequires: mpich-devel
-BuildRequires: hdf5-mpich-devel >= 1.8.4
-Provides: %{name}-mpich2 = %{version}-%{release}
-Obsoletes: %{name}-mpich2 < 4.3.0-4
+BuildRequires: %{mpich}-devel
+BuildRequires: hdf5-mpich-devel >= 1.12.0
+Provides: %{name}-mpich = %{version}-%{release}
+Obsoletes: %{name}-mpich < 4.3.0-4
 
 %description mpich
 NetCDF parallel mpich libraries
@@ -112,8 +116,8 @@ Requires: %{name}-mpich%{?_isa} = %{version}-%{release}
 Requires: pkgconfig%{?_isa}
 Requires: hdf5-mpich-devel%{?_isa}
 Requires: libcurl-devel%{?_isa}
-Provides: %{name}-mpich2-devel = %{version}-%{release}
-Obsoletes: %{name}-mpich2-devel < 4.3.0-4
+Provides: %{name}-mpich-devel = %{version}-%{release}
+Obsoletes: %{name}-mpich-devel < 4.3.0-4
 
 %description mpich-devel
 NetCDF parallel mpich development files
@@ -123,8 +127,8 @@ NetCDF parallel mpich development files
 Summary: NetCDF mpich static libraries
 Group: Development/Libraries
 Requires: %{name}-mpich-devel%{?_isa} = %{version}-%{release}
-Provides: %{name}-mpich2-static = %{version}-%{release}
-Obsoletes: %{name}-mpich2-static < 4.3.0-4
+Provides: %{name}-mpich-static = %{version}-%{release}
+Obsoletes: %{name}-mpich-static < 4.3.0-4
 
 %description mpich-static
 NetCDF parallel mpich static libraries
@@ -136,7 +140,7 @@ NetCDF parallel mpich static libraries
 Summary: NetCDF openmpi libraries
 Group: Development/Libraries
 Requires: hdf5-openmpi%{?_isa} = %{_hdf5_version}
-BuildRequires: openmpi-devel
+BuildRequires: %{openmpi}-devel
 BuildRequires: hdf5-openmpi-devel >= 1.8.4
 
 %description openmpi
@@ -147,7 +151,7 @@ NetCDF parallel openmpi libraries
 Summary: NetCDF openmpi development files
 Group: Development/Libraries
 Requires: %{name}-openmpi%{_isa} = %{version}-%{release}
-Requires: openmpi-devel%{?_isa}
+Requires: %{openmpi}-devel%{?_isa}
 Requires: pkgconfig%{?_isa}
 Requires: hdf5-openmpi-devel%{?_isa}
 Requires: libcurl-devel%{?_isa}
@@ -182,11 +186,9 @@ m4 libsrc/ncx.m4 > libsrc/ncx.c
            --enable-netcdf-4 \\\
            --enable-dap \\\
            --enable-extra-example-tests \\\
-           CPPFLAGS=-I%{_includedir}/hdf \\\
            LIBS="-ljpeg" \\\
-           --enable-hdf4 \\\
+           --with-szlib \\\
            --disable-dap-remote-tests \\\
-           LDFLAGS=-L/usr/lib64/hdf LD_LIBRARY_PATH="/usr/lib64/hdf/" CPPFLAGS=-I/usr/include/hdf
 %{nil}
 export LDFLAGS="%{__global_ldflags} -L%{_libdir}/hdf"
 
@@ -198,7 +200,9 @@ mkdir build
 pushd build
 ln -s ../configure .
 export CC=gcc
-%configure %{configure_opts}
+%configure %{configure_opts} \
+  --enable-hdf4 \
+  LDFLAGS=-L/usr/lib64/hdf LD_LIBRARY_PATH="/usr/lib64/hdf/" CPPFLAGS=-I%{_includedir}/hdf
 make %{?_smp_mflags}
 popd
 
@@ -218,8 +222,11 @@ do
     --includedir=%{_includedir}/$mpi-%{_arch} \
     --datarootdir=%{_libdir}/$mpi/share \
     --mandir=%{_libdir}/$mpi/share/man \
+    --enable-pnetcdf \
+    --enable-parallel \
+    LDFLAGS=-L/usr/lib64/$mpi/lib CPPFLAGS=-I/usr/include/$mpi-x86_64,/usr/include/$mpi CPPFLAGS=-I/usr/include/$mpi-x86_64,/usr/include/$mpi \
     %ifnarch s390 s390x
-    --enable-parallel-tests
+      --enable-parallel-tests
     %else
       %{nil}
     %endif
@@ -267,8 +274,7 @@ done
 %{_bindir}/ncdump
 %{_bindir}/ncgen
 %{_bindir}/ncgen3
-%{_bindir}/ocprint
-%{_libdir}/*.so.13*
+%{_libdir}/*.so.18*
 %{_mandir}/man1/*
 
 %files devel
@@ -277,6 +283,9 @@ done
 %{_includedir}/netcdf.h
 %{_includedir}/netcdf_meta.h
 %{_includedir}/netcdf_mem.h
+%{_includedir}/netcdf_aux.h
+%{_includedir}/netcdf_dispatch.h
+%{_includedir}/netcdf_filter.h
 %{_libdir}/libnetcdf.settings
 %{_libdir}/*.so
 %{_libdir}/pkgconfig/netcdf.pc
@@ -288,52 +297,54 @@ done
 %if %{with_mpich}
 %files mpich
 %doc COPYRIGHT README.md RELEASE_NOTES.md
-%{_libdir}/mpich/bin/nccopy
-%{_libdir}/mpich/bin/ncdump
-%{_libdir}/mpich/bin/ncgen
-%{_libdir}/mpich/bin/ncgen3
-%{_libdir}/mpich/bin/ocprint
-%{_libdir}/mpich/lib/*.so.13*
-%doc %{_libdir}/mpich/share/man/man1/*.1*
+%{_libdir}/%{mpich}/bin/nccopy
+%{_libdir}/%{mpich}/bin/ncdump
+%{_libdir}/%{mpich}/bin/ncgen
+%{_libdir}/%{mpich}/bin/ncgen3
+%{_libdir}/%{mpich}/lib/*.so.18*
+%doc %{_libdir}/%{mpich}/share/man/man1/*.1*
 
 %files mpich-devel
-%{_libdir}/mpich/bin/nc-config
-%{_includedir}/mpich-%{_arch}
-%{_libdir}/mpich/lib/libnetcdf.settings
-%{_libdir}/mpich/lib/*.so
-%{_libdir}/mpich/lib/pkgconfig/%{name}.pc
-%doc %{_libdir}/mpich/share/man/man3/*.3*
+%{_libdir}/%{mpich}/bin/nc-config
+%{_includedir}/%{mpich}-%{_arch}
+%{_libdir}/%{mpich}/lib/libnetcdf.settings
+%{_libdir}/%{mpich}/lib/*.so
+%{_libdir}/%{mpich}/lib/pkgconfig/%{name}.pc
+%doc %{_libdir}/%{mpich}/share/man/man3/*.3*
 
 %files mpich-static
-%{_libdir}/mpich/lib/*.a
+%{_libdir}/%{mpich}/lib/*.a
 %endif
 
 %if %{with_openmpi}
 %files openmpi
 %doc COPYRIGHT README.md RELEASE_NOTES.md
-%{_libdir}/openmpi/bin/nccopy
-%{_libdir}/openmpi/bin/ncdump
-%{_libdir}/openmpi/bin/ncgen
-%{_libdir}/openmpi/bin/ncgen3
-%{_libdir}/openmpi/bin/ocprint
-%{_libdir}/openmpi/lib/*.so.13*
-%doc %{_libdir}/openmpi/share/man/man1/*.1*
+%{_libdir}/%{openmpi}/bin/nccopy
+%{_libdir}/%{openmpi}/bin/ncdump
+%{_libdir}/%{openmpi}/bin/ncgen
+%{_libdir}/%{openmpi}/bin/ncgen3
+%{_libdir}/%{openmpi}/lib/*.so.18*
+%doc %{_libdir}/%{openmpi}/share/man/man1/*.1*
 
 %files openmpi-devel
-%{_libdir}/openmpi/bin/nc-config
-%{_includedir}/openmpi-%{_arch}
-%{_libdir}/openmpi/lib/libnetcdf.settings
-%{_libdir}/openmpi/lib/*.so
-%{_libdir}/openmpi/lib/pkgconfig/%{name}.pc
-%doc %{_libdir}/openmpi/share/man/man3/*.3*
+%{_libdir}/%{openmpi}/bin/nc-config
+%{_includedir}/%{openmpi}-%{_arch}
+%{_libdir}/%{openmpi}/lib/libnetcdf.settings
+%{_libdir}/%{openmpi}/lib/*.so
+%{_libdir}/%{openmpi}/lib/pkgconfig/%{name}.pc
+%doc %{_libdir}/%{openmpi}/share/man/man3/*.3*
 
 %files openmpi-static
-%{_libdir}/openmpi/lib/*.a
+%{_libdir}/%{openmpi}/lib/*.a
 %endif
 
 
 %changelog
-* Thu Aug 23 2018 Ketan Patel <k2patel@live.com> - 4.6.1-1
+* Fri Jul 31 2020 Ketan Patel <k2patel@live.com> - 4.7.4-1
+- Updated to 4.7.4
+- Setup different mpich globally
+
+* Thu Aug 23 2018 Ketan Patel <patelkr@ornl.gov> - 4.6.1-1
 - Build even test fail - known to fail run_par_tests.sh
 - Updated to 4.6.1
 

@@ -4,7 +4,7 @@
 
 Name:           cdo
 #BuildRequires:  
-Version:        1.9.4
+Version:        1.9.8
 Release:        1
 Summary:        Climate Data Operators
 License:        GNU GENERAL PUBLIC LICENSE Version 2, June 1991
@@ -12,16 +12,18 @@ Group:          Productivity/Graphics/Visualization/Other
 Requires:       netcdf
 Autoreqprov:    on
 URL:            https://code.zmaw.de/projects/cdo
-Patch0:		cdo-module.patch
+#Patch0:		cdo-module.patch
 Source0:        cdo-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 
 BuildRequires:  netcdf-devel
 BuildRequires:  hdf5-devel
 BuildRequires:  szip-devel
-BuildRequires:  grib_api-devel
+BuildRequires:  eccodes-devel
 BuildRequires:  proj-devel
 BuildRequires:  fftw-devel
+BuildRequires:  uuid-devel
+BuildRequires:  libxml2-devel
 
 Requires: netcdf >= 4.3.3.1
 Requires: hdf5 >= 1.8.15.1
@@ -45,11 +47,11 @@ Authors:
 
 %prep
 %setup
-%patch0 -p1 -b .module
+#%patch0 -p1 -b .module
 
 
 %build
-./configure --build=x86_64-redhat-linux-gnu --host=x86_64-redhat-linux-gnu --target=x86_64-redhat-linux-gnu --program-prefix= --exec-prefix=/usr --bindir=/usr/bin --sbindir=/usr/sbin --sysconfdir=/etc --datadir=/usr/share --includedir=/usr/include --includedir=%{_builddir}/usr/lib64 --libdir=/usr/lib64 --libexecdir=/usr/libexec --localstatedir=/var --sharedstatedir=/usr/com --mandir=/usr/share/man --infodir=/usr/share/info --prefix=%{_prefix} --with-netcdf --with-szlib --with-hdf5 --with-grib_api --with-proj --with-udunits2 --with-curl --with-libxml2 --with-fftw3
+./configure --build=x86_64-redhat-linux-gnu --host=x86_64-redhat-linux-gnu --target=x86_64-redhat-linux-gnu --program-prefix= --exec-prefix=/usr --bindir=/usr/bin --sbindir=/usr/sbin --sysconfdir=/etc --datadir=/usr/share --includedir=/usr/include --includedir=%{_builddir}/usr/lib64 --libdir=/usr/lib64 --libexecdir=/usr/libexec --localstatedir=/var --sharedstatedir=/usr/com --mandir=/usr/share/man --infodir=/usr/share/info --prefix=%{_prefix} --with-netcdf --with-szlib --with-hdf5 --with-eccodes --with-proj --with-udunits2 --with-curl --with-libxml2 --with-fftw3
 make 
 
 %install
@@ -65,10 +67,10 @@ rm -rf $RPM_BUILD_ROOT
 #%{_prefix}/bin/cdotest
 
 %changelog -n cdo
-* Fri Aug 10 2018 Ketan Patel <k2patel@live.com> - 1.9.4-1
+* Fri Aug 10 2018 Ketan Patel <patelkr@ornl.gov> - 1.9.4-1
 - Updating to 1.9.4
 
-* Fri Jan 02 2015 - k2patel@live.com
+* Fri Jan 02 2015 - patelkr@ornl.gov
 - Building with all dep.
 * Mon Aug 25 2008 - petri@pik-potsdam.de
 - adapted to cdo-1.2.0

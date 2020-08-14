@@ -17,11 +17,11 @@
 %global proj_somaj 13
 
 # Tests can be of a different version
-%global testversion 2.3.1
+%global testversion 2.4.4
 %global run_tests 1
 
 Name:      gdal
-Version:   2.3.1
+Version:   2.4.4
 Release:   1%{?dist}
 Summary:   GIS file format library
 Group:     System Environment/Libraries
@@ -39,14 +39,18 @@ Source3:   %{name}-cleaner.sh
 
 Source4:   PROVENANCE.TXT-fedora
 
-# Patch to use system g2clib
-# Patch1:    %{name}-g2clib.patch
 # Patch for Fedora JNI library location
-Patch2:    %{name}-jni.patch
+Patch1:    %{name}-jni.patch
 # Patch for NASA mrf
-Patch3:    %{name}-mrf.patch
+Patch2:    %{name}-mrf.patch
 # Fedora uses Alternatives for Java
-Patch8:    %{name}-java.patch
+Patch3:    %{name}-java.patch
+# Patch for iso8211
+Patch4:    %{name}-iso8211.patch
+# Patch for tirpc
+Patch5:    %{name}-tirpcinc.patch
+# Patch for jasper
+#Patch6:    %{name}-jasper.patch
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
@@ -90,7 +94,7 @@ BuildRequires: libdap-devel
 BuildRequires: librx-devel
 BuildRequires: mysql-devel
 BuildRequires: numpy
-BuildRequires: python34-numpy
+BuildRequires: python36-numpy
 BuildRequires: pcre-devel
 BuildRequires: ogdi-devel
 BuildRequires: perl-devel
@@ -101,7 +105,7 @@ BuildRequires: poppler-devel
 BuildRequires: postgresql-devel
 BuildRequires: proj-devel
 BuildRequires: python2-devel
-BuildRequires: python34-devel
+BuildRequires: python36-devel
 BuildRequires: sqlite-devel
 BuildRequires: swig
 BuildRequires: texlive-latex
@@ -219,7 +223,7 @@ The package also includes a couple of useful utilities in Python.
 %package python3
 Summary: Python modules for the GDAL file format library
 Group:   Development/Libraries
-Requires: python34-numpy
+Requires: python36-numpy
 Requires: %{name}-libs%{?_isa} = %{version}-%{release}
 
 %description python3
@@ -253,10 +257,12 @@ rm -rf frmts/gtiff/libgeotiff \
     frmts/gtiff/libtiff
 # rm -r frmts/grib/degrib/g2clib
 
-# %patch1 -p1 -b .g2clib~
-%patch2 -p1 -b .jni~
-%patch3 -p1 -b .mrf~
-%patch8 -p1 -b .java~
+%patch1 -p1 -b .jni~
+%patch2 -p1 -b .mrf~
+%patch3 -p1 -b .java~
+%patch4 -p1 -b .iso8211~
+%patch5 -p1 -b .tirpc~
+#%patch6 -p1 -b .jasper~
 
 # Copy in PROVENANCE.TXT-fedora
 cp -p %SOURCE4 .
@@ -450,7 +456,7 @@ rm -rf %{buildroot}
 # Install Python 3 module
 # Must be done first so executables are Python 2.
 pushd swig/python
-  %{__python3} setup.py install --skip-build --root %{buildroot}
+  %{__python3} setup.py install --skip-build --root %{buildroot}/
 popd
 
 make    DESTDIR=%{buildroot} \
@@ -467,9 +473,9 @@ mkdir -p %{buildroot}%{_libdir}/%{name}plugins
 
 #TODO: Don't do that?
 mkdir -p %{buildroot}%{perl_vendorlib}
-mv %{buildroot}/usr/lib/perl5/x86_64-linux-thread-multi/* %{buildroot}%{perl_vendorlib}/
+mv %{buildroot}%{perl_archlib}/* %{buildroot}%{perl_vendorlib}/
 find %{buildroot}%{perl_vendorlib} -name "*.dox" -exec rm -rf '{}' \;
-rm -f %{buildroot}%{perl_archlib}/perllocal.pod
+rm -f %{buildroot}%{perl_vendorlib}/perllocal.pod 
 
 # Correct permissions
 #TODO and potential ticket: Why are the permissions not correct?
@@ -624,7 +630,7 @@ done
 
 mkdir -p %{buildroot}%{_mandir}
 mv -f %{buildroot}/usr/man/* %{buildroot}%{_mandir}/
-rm -f %{buildroot}%{_mandir}/man1/_scr_lrknox_rpmbuild_BUILD_gdal-2.3.1_apps_.1.gz
+rm -f %{buildroot}%{_mandir}/man1/*_rpmbuild_BUILD_gdal*_apps_.1.gz
 
 pushd %{name}autotest-%{testversion}
   # Export test enviroment
@@ -722,7 +728,7 @@ popd
 %{_mandir}/man3/*.3pm*
 
 %files python
-%doc swig/python/README.txt
+%doc swig/python/README.rst
 %doc swig/python/samples
 #TODO: Bug with .py files in EPEL 5 bindir, see http://fedoraproject.org/wiki/EPEL/GuidelinesAndPolicies
 %{_bindir}/*.py
@@ -738,10 +744,9 @@ popd
 %{python2_sitearch}/osr.py*
 %{python2_sitearch}/ogr.py*
 %{python2_sitearch}/gdal*.py*
-%{python2_sitearch}/gnm.py*
 
 %files python3
-%doc swig/python/README.txt
+%doc swig/python/README.rst
 %doc swig/python3/samples
 %{python3_sitearch}/osgeo
 %{python3_sitearch}/GDAL-%{version}-py*.egg-info
@@ -751,8 +756,6 @@ popd
 %{python3_sitearch}/__pycache__/ogr.*.py*
 %{python3_sitearch}/gdal*.py
 %{python3_sitearch}/__pycache__/gdal*.*.py*
-%{python3_sitearch}/gnm.py
-%{python3_sitearch}/__pycache__/gnm*.*.py*
 
 %files doc
 %doc gdal_frmts ogrsf_frmts refman
@@ -766,7 +769,7 @@ popd
 #Or as before, using ldconfig
 
 %changelog
-* Thu Aug 16 2018 Ketan Patel <k2patel@live.com> - 2.3.1-1
+* Thu Aug 16 2018 Ketan Patel <patelkr@ornl.gov> - 2.3.1-1
 - Removing old running patches and fixes not required.
 - Fixing issue for not having armadillo library not being processed.
 - Fixing issue with perl library change

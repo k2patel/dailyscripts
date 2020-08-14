@@ -1,5 +1,5 @@
 Name:           armadillo
-Version:        8.600.0
+Version:        9.900.2
 Release:        1%{?dist}
 Summary:        Fast C++ matrix library with interfaces to LAPACK and ATLAS
 
@@ -86,13 +86,13 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/armadillo
 %{_includedir}/armadillo_bits/
 %{_datadir}/Armadillo/
-%doc README.txt index.html docs.html
+%doc README.md index.html docs.html
 %doc examples armadillo_icon.png
 %doc armadillo_nicta_2010.pdf rcpp_armadillo_csda_2014.pdf
 %doc mex_interface
 
 %changelog
-* Wed Aug 08 2018 Ketan Patel <k2patel@live.com> 8.600.0-1
+* Wed Aug 08 2018 Ketan Patel <patelkr@ornl.gov> 8.600.0-1
 - Update to 8.600.0
 - Added pkgconfig file to the rpm
 

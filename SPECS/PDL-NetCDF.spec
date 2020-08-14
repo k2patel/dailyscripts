@@ -14,7 +14,7 @@
 name:      perl-PDL-NetCDF
 summary:   PDL-NetCDF - Object-oriented interface between NetCDF files and PDL objects.
 version:   4.20
-release:   2
+release:   3
 vendor:    Douglas Hunt (dhunt@ucar.edu)
 packager:  Arix International <cpan2rpm@arix.com>
 license:   Artistic
@@ -139,5 +139,5 @@ find %{buildroot}%{_prefix}             \
 %defattr(-,root,root)
 
 %changelog
-* Fri Aug 4 2017 k2patel@live.com
+* Fri Aug 4 2017 lrknox@k2patelrad.ornl.gov
 - Initial build.

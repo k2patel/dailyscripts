@@ -1,5 +1,5 @@
 Name:      freexl
-Version:   1.0.5
+Version:   1.0.6
 Release:   1%{?dist}
 Summary:   Library to extract data from within an Excel spreadsheet 
 Group:     System Environment/Libraries
@@ -79,6 +79,9 @@ rm -f %{buildroot}%{_libdir}/lib%{name}.la
 
 
 %changelog
+* Mon Aug 03 2015 Ketan Patel <k2patel@live.com> - 1.0.6-1
+- Updating to version 1.0.6
+
 * Tue Jul 28 2015 Volker Froehlich <volker27@gmx.at> - 1.0.2-2
 - Release bump to work around the f23 build being wrongly tagged for f24
 

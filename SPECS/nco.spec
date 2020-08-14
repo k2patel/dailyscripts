@@ -1,5 +1,5 @@
 Name:           nco
-Version:        4.7.5
+Version:        4.9.3
 Release:        1%{?dist}
 Summary:        Suite of programs for manipulating NetCDF/HDF4 files
 Group:          Applications/Engineering
@@ -7,12 +7,6 @@ License:        GPLv3
 URL:            http://nco.sourceforge.net/
 
 Source0:        http://nco.sourceforge.net/src/nco-%{version}.tar.gz
-#Patch0:         nco-4.6.0_c++.patch
-#Patch0:         nco-4.0.3-install_C_headers.patch
-#%if 0%{?rhel} && 0%{?rhel} <= 5
-#Patch out variables from in.cdl that earlier versioins of netcdf complain about
-#Patch1:         nco-4.0.5-fillvalue.patch
-#%endif
 
 BuildRequires:  bison, flex, gawk
 BuildRequires:  netcdf-devel
@@ -62,10 +56,6 @@ This package contains the NCO static libs.
 
 %prep
 %setup -q
-#%patch0 -p1 -b .libver
-#%if 0%{?rhel} && 0%{?rhel} <= 5
-#%patch1 -p1 -b .fillvalue
-#%endif
 
 
 %build
@@ -100,7 +90,7 @@ fi
 
 
 %files
-%doc doc/README doc/LICENSE doc/rtfm.txt 
+%doc doc/LICENSE doc/rtfm.txt 
 %{_bindir}/ncap2
 %{_bindir}/ncatted
 %{_bindir}/ncbo
@@ -145,7 +135,7 @@ fi
 
 
 %changelog
-* Fri Aug 10 2018 Ketan Patel <k2patel@live.com> 4.7.5-1
+* Fri Aug 10 2018 Ketan Patel <patelkr@ornl.gov> 4.7.5-1
 - ncap is deprecated and removed from rpm
 - update to 4.7.5
 

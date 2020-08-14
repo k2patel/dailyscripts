@@ -1,39 +1,37 @@
-# Proj has proved not beeing compatible all the time, bug #839651
-%{bcond_without proj}
-
 # Slatec does not work on PPC64 since 2.4.something
-%ifarch ppc64
-%{bcond_with slatec}
+# could be a big endian related issue
+%ifarch ppc64 s390 s390x
+%{bcond_with perl_PDL_enables_slatec}
 %else
-%{bcond_without slatec}
+%{bcond_without perl_PDL_enables_slatec}
 %endif
 
+# Run optional test
+%{bcond_without perl_PDL_enables_optional_test}
+
 Name:           perl-PDL
-%global cpan_version 2.019
-Version:        2.19.0
-Release:        3%{?dist}
+%global cpan_version 2.021
+Version:        2.21.0
+Release:        6%{?dist}
 Summary:        The Perl Data Language
-Group:          Development/Libraries
 License:        GPL+ or Artistic
 Url:            http://pdl.perl.org/
-Source0:        http://search.cpan.org/CPAN/authors/id/C/CH/CHM/PDL-%{cpan_version}.tar.gz
+Source0:        https://cpan.metacpan.org/authors/id/E/ET/ETJ/PDL-%{cpan_version}.tar.gz
 # Uncomment to enable PDL::IO::Browser
 # Patch0:         perl-PDL-2.4.10-settings.patch
-# Patch1:         perl-PDL-2.8.0-hdf.patch
 # Disable Proj support when it's not compatible, bug #839651
 Patch2:         PDL-2.4.10-Disable-PDL-GIS-Proj.patch
 # Compile Slatec as PIC, needed for ARM
 Patch3:         PDL-2.6.0.90-Compile-Slatec-code-as-PIC.patch
 # Disable Slatec code crashing on PPC64, bug #1041304
 Patch4:         PDL-2.14.0-Disable-PDL-Slatec.patch
-# AutoReqProv: no
-# GSL 2 support
-# https://sourceforge.net/p/pdl/bugs/407/
-#Patch5:         perl-PDL-gsl.patch
+Patch5:         PDL-2.17.0-Update-additional-deps-for-Basic-Core.patch
+Patch6:         PDL-2.20.0-Compile-pdl-c-as-PIC.patch
 BuildRequires:  coreutils
 BuildRequires:  fftw2-devel
 BuildRequires:  findutils
 BuildRequires:  freeglut-devel
+BuildRequires:  gcc-c++
 BuildRequires:  gcc-gfortran
 BuildRequires:  gd-devel
 BuildRequires:  gsl-devel >= 1.0
@@ -41,8 +39,11 @@ BuildRequires:  hdf-static hdf-devel
 BuildRequires:  libXi-devel
 BuildRequires:  libXmu-devel
 BuildRequires:  make
-BuildRequires:  perl
+BuildRequires:  perl-devel
+BuildRequires:  perl-generators
+BuildRequires:  perl-interpreter
 # perl(Astro::FITS::Header) not packaged yet
+BuildRequires:  perl(blib)
 # Modified perl(Carp) bundled
 # Modified perl(Carp::Heavy) bundled
 BuildRequires:  perl(Config)
@@ -51,11 +52,12 @@ BuildRequires:  perl(Data::Dumper) >= 2.121
 BuildRequires:  perl(Devel::CheckLib)
 BuildRequires:  perl(Devel::REPL)
 BuildRequires:  perl(ExtUtils::F77)
-BuildRequires:  perl(ExtUtils::MakeMaker) >= 6.56
+BuildRequires:  perl(ExtUtils::MakeMaker) >= 6.68
 BuildRequires:  perl(File::Spec) >= 0.6
 BuildRequires:  perl(IO::File)
 BuildRequires:  perl(lib)
-BuildRequires:  perl(OpenGL) >= 0.6702
+# OpenGL >= 0.6702 is required but newer OpenGL-0.70 shortened the version
+BuildRequires:  perl(OpenGL) >= 0.67.02
 # OpenGL::Config is private OpenGL hash
 BuildRequires:  perl(Pod::Parser)
 BuildRequires:  perl(Pod::Select)
@@ -95,7 +97,9 @@ BuildRequires:  perl(POSIX)
 BuildRequires:  perl(Scalar::Util)
 BuildRequires:  perl(SelfLoader)
 BuildRequires:  perl(Symbol)
+BuildRequires:  perl(Term::ReadKey)
 BuildRequires:  perl(Text::Balanced) >= 1.89
+BuildRequires:  perl(version)
 # Tests:
 BuildRequires:  perl(Benchmark)
 BuildRequires:  perl(ExtUtils::testlib)
@@ -106,11 +110,15 @@ BuildRequires:  perl(Test::Deep)
 BuildRequires:  perl(Test::Exception)
 BuildRequires:  perl(Test::More)
 BuildRequires:  perl(Test::Warn)
+%if %{with perl_PDL_enables_optional_test}
 # Optional tests:
+# netpbm-progs for jpegtopnm
+BuildRequires:  netpbm-progs
 BuildRequires:  perl(Convert::UU)
 BuildRequires:  perl(Storable) >= 1.03
+%endif
 
-%if %{with proj}
+%if %{with perl_PDL_enables_proj}
 # Needed by PDL::GIS::Proj
 BuildRequires:  proj-devel
 BuildRequires:  proj-nad
@@ -127,7 +135,8 @@ Requires:       perl(File::Spec) >= 0.6
 Requires:       perl(Filter::Simple) >= 0.88
 Requires:       perl(Inline) >= 0.43
 Requires:       perl(Module::Compile) >= 0.23
-Requires:       perl(OpenGL) >= 0.6702
+# OpenGL >= 0.6702 is required but newer OpenGL-0.70 shortened the version
+Requires:       perl(OpenGL) >= 0.67.02
 Requires:       perl(Prima::Application)
 Requires:       perl(Prima::Buttons)
 Requires:       perl(Prima::Edit)
@@ -135,26 +144,17 @@ Requires:       perl(Prima::Label)
 Requires:       perl(Prima::PodView)
 Requires:       perl(Prima::Utils)
 Requires:       perl(Text::Balanced) >= 1.89
-Provides:       perl(PDL::Config)
-Provides:       perl(PDL::PP::CType)
-Provides:       perl(PDL::PP::Dims)
-Provides:       perl(PDL::PP::PDLCode)
-Provides:       perl(PDL::PP::SymTab)
-Provides:       perl(PDL::PP::XS)
-Provides:       perl(PDL::Lite)
-Provides:       perl(PDL::LiteF)
-Provides:       perl(PDL::Graphics::TriD)
-Provides:       perl(PDL::Graphics::TriD::GL) 
-Provides:       perl(PDL::Graphics::TriD::Contours)
-Provides:       perl(PDL::Graphics::TriD::Image)
-Provides:       perl(PDL::Graphics::TriD::Objects)
-Provides:       perl(PDL::Exporter)
-Provides:       perl(PDL::Core)
-Provides:       perl(PGPLOT)
+Provides:       perl(PDL::Config) = %{version}
+Provides:       perl(PDL::PP::CType) = %{version}
+Provides:       perl(PDL::PP::Dims) = %{version}
+Provides:       perl(PDL::PP::PDLCode) = %{version}
+Provides:       perl(PDL::PP::SymTab) = %{version}
+Provides:       perl(PDL::PP::XS) = %{version}
+Provides:       perl(PDL::Graphics::TriD::Objects) = %{version}
 
 %{?perl_default_filter}
 %global __requires_exclude %{__requires_exclude}|^perl\\(%s\\)$
-%global __requires_exclude %{?__requires_exclude:%__requires_exclude|}^perl\\((OpenGL::Config|PDL::Demos::Screen|Tk|Win32::DDE::Client)\\)$
+%global __requires_exclude %{?__requires_exclude:%__requires_exclude|}^perl\\((OpenGL::Config|PDL::Demos::Screen|PDL::Graphics::PGPLOT|PDL::Graphics::PGPLOT::Window|Tk|Win32::DDE::Client)\\)$
 %global __provides_exclude %{?__provides_exclude:%__provides_exclude|}^perl\\(Inline\\)$
 %global __provides_exclude %__provides_exclude|^perl\\(Win32.*\\)$
 # Remove under-specified dependencies
@@ -171,27 +171,27 @@ such commercial packages as IDL and MatLab.
 %setup -q -n PDL-%{cpan_version}
 # Uncomment to enable PDL::IO::Browser
 # %%patch0 -p1 -b .settings
-#%patch1 -p1 -b .hdf
-%if %{without proj}
 %patch2 -p1 -b .proj
-%endif
 %patch3 -p1 -b .slatecpic
-%if %{without slatec}
+%if %{without perl_PDL_enables_slatec}
 %patch4 -p1 -b .slatec
 %endif
-#%patch5 -p1 -b .gsl
+%patch5 -p1
+%patch6 -p1
 # Fix shellbang
 sed -e 's,^#!/usr/bin/env perl,%(perl -MConfig -e 'print $Config{startperl}'),' -i Perldl2/pdl2
 
 %build
-# Optimization above -O0 segfaults tests, bug #914307
-CFLAGS="%{optflags} -Wno-unused -O0"
-%ifarch ppc ppc64 s390 s390x
-CFLAGS="$CFLAGS -fsigned-char"
+# Suppress numerous warnings about unused variables
+CFLAGS="%{optflags} -Wno-unused"
+# Fused multiply-add instructions cause segfaults on 64-bit PowerPC if GSL
+# support is enabled (the same option is in gsl.spec), bug #1410162
+%ifarch ppc64 ppc64le s390 s390x
+CFLAGS="$CFLAGS -ffp-contract=off"
 %endif
 # Uncomment to enable PDL::IO::Browser
 # CFLAGS="$CFLAGS -DNCURSES"
-CFLAGS="$CFLAGS" perl Makefile.PL INSTALLDIRS=vendor OPTIMIZE="$CFLAGS"
+CFLAGS="$CFLAGS" perl Makefile.PL INSTALLDIRS=vendor NO_PACKLIST=1 OPTIMIZE="$CFLAGS"
 make OPTIMIZE="$CFLAGS" %{?_smp_mflags}
 
 %install
@@ -199,9 +199,8 @@ make pure_install DESTDIR=%{buildroot}
 perl -Mblib Doc/scantree.pl %{buildroot}%{perl_vendorarch}
 perl -pi -e "s|%{buildroot}/|/|g" %{buildroot}%{perl_vendorarch}/PDL/pdldoc.db
 find %{buildroot}%{perl_vendorarch} -type f -name "*.pm" | xargs chmod -x
-find %{buildroot} -type f -name .packlist -exec rm -f {} ';'
-find %{buildroot} -type f -name '*.bs' -empty -exec rm -f {} ';'
-chmod -R u+w %{buildroot}/*
+find %{buildroot} -type f -name '*.bs' -empty -delete
+%{_fixperms} %{buildroot}/*
 
 %check
 unset DISPLAY
@@ -209,7 +208,8 @@ export PERL5LIB=`pwd`/blib/lib
 make test
 
 %files
-%doc COPYING Changes INTERNATIONALIZATION Known_problems README TODO
+%license COPYING
+%doc Changes INTERNATIONALIZATION README TODO
 %{_bindir}/*
 %{perl_vendorarch}/Inline/*
 %{perl_vendorarch}/PDL*
@@ -218,6 +218,110 @@ make test
 %{_mandir}/man3/*.3*
 
 %changelog
+* Tue Jul 28 2020 Fedora Release Engineering <releng@fedoraproject.org> - 2.21.0-6
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_33_Mass_Rebuild
+
+* Tue Jun 23 2020 Jitka Plesnikova <jplesnik@redhat.com> - 2.21.0-5
+- Perl 5.32 rebuild
+
+* Thu Apr  2 2020 Robin Lee <cheeselee@fedoraproject.org> - 2.21.0-4
+- Fix broken deps since 2.20. PDL::Graphics::PGPLOT is no longer provided but
+  PDL::Demos::PGPLOT_demo still requires it
+
+* Tue Mar 10 2020 Jitka Plesnikova <jplesnik@redhat.com> - 2.21.0-3
+- Specify all dependencies
+
+* Mon Mar 02 2020 Jitka Plesnikova <jplesnik@redhat.com> - 2.21.0-1
+- 2.21.0 bump
+
+* Thu Jan 30 2020 Fedora Release Engineering <releng@fedoraproject.org> - 2.20.0-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_32_Mass_Rebuild
+
+* Thu Dec 12 2019 Jitka Plesnikova <jplesnik@redhat.com> - 2.20.0-1
+- 2.20.0 bump
+
+* Thu Sep 05 2019 Jitka Plesnikova <jplesnik@redhat.com> - 2.19.0-9
+- Rename BR proj-nad to proj-datumgrid
+
+* Tue Aug 20 2019 Susi Lehtola <jussilehtola@fedoraproject.org> - 2.19.0-8
+- Rebuilt for GSL 2.6.
+
+* Fri Jul 26 2019 Fedora Release Engineering <releng@fedoraproject.org> - 2.19.0-7
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_31_Mass_Rebuild
+
+* Fri May 31 2019 Jitka Plesnikova <jplesnik@redhat.com> - 2.19.0-6
+- Perl 5.30 rebuild
+
+* Thu Feb 14 2019 Björn Esser <besser82@fedoraproject.org> - 2.19.0-5
+- rebuilt (proj)
+
+* Fri Feb 01 2019 Fedora Release Engineering <releng@fedoraproject.org> - 2.19.0-4
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_30_Mass_Rebuild
+
+* Fri Jul 13 2018 Fedora Release Engineering <releng@fedoraproject.org> - 2.19.0-3
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_29_Mass_Rebuild
+
+* Sat Jun 30 2018 Jitka Plesnikova <jplesnik@redhat.com> - 2.19.0-2
+- Perl 5.28 rebuild
+
+* Mon May 07 2018 Petr Pisar <ppisar@redhat.com> - 2.19.0-1
+- 2.019 bump
+
+* Thu Feb 08 2018 Fedora Release Engineering <releng@fedoraproject.org> - 2.18.0-6
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_28_Mass_Rebuild
+
+* Wed Jan 31 2018 Petr Pisar <ppisar@redhat.com> - 2.18.0-5
+- Modernize spec file
+
+* Thu Aug 03 2017 Fedora Release Engineering <releng@fedoraproject.org> - 2.18.0-4
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_27_Binutils_Mass_Rebuild
+
+* Thu Jul 27 2017 Fedora Release Engineering <releng@fedoraproject.org> - 2.18.0-3
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_27_Mass_Rebuild
+
+* Tue Jun 06 2017 Jitka Plesnikova <jplesnik@redhat.com> - 2.18.0-2
+- Perl 5.26 rebuild
+
+* Mon May 22 2017 Jitka Plesnikova <jplesnik@redhat.com> - 2.18.0-1
+- 2.018 bump
+
+* Thu Apr 27 2017 Petr Pisar <ppisar@redhat.com> - 2.17.0-8
+- Adapt to changes in List-MoreUtils-0.418 (bug #1446104)
+
+* Fri Feb 17 2017 Petr Pisar <ppisar@redhat.com> - 2.17.0-7
+- Adapt OpenGL dependency to OpenGL-0.70
+
+* Wed Feb 15 2017 Dan Horák <dan[at]danny.cz> - 2.17.0-6
+- Fix build on s390(x)
+
+* Sat Feb 11 2017 Fedora Release Engineering <releng@fedoraproject.org> - 2.17.0-5
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_26_Mass_Rebuild
+
+* Tue Jan 31 2017 Petr Pisar <ppisar@redhat.com> - 2.17.0-4
+- Rebuild against libgfortran-7.0.1
+
+* Wed Jan 25 2017 Petr Pisar <ppisar@redhat.com> - 2.17.0-3
+- Rebuild against proj-4.9.3
+
+* Thu Jan 05 2017 Petr Pisar <ppisar@redhat.com> - 2.17.0-2
+- Disable fused multiply-add instructions on 64-bit PowerPC because of GSL
+  (bug #1410162)
+
+* Mon Oct 10 2016 Jitka Plesnikova <jplesnik@redhat.com> - 2.17.0-1
+- 2.017 bump
+
+* Mon Jun 06 2016 Jitka Plesnikova <jplesnik@redhat.com> - 2.16.0-1
+- 2.016 bump
+
+* Mon May 16 2016 Jitka Plesnikova <jplesnik@redhat.com> - 2.15.0-5
+- Perl 5.24 rebuild
+
+* Mon Feb 22 2016 Orion Poplawski <orion@cora.nwra.com> - 2.15.0-4
+- Rebuild for gsl 2.1
+
+* Thu Feb 04 2016 Fedora Release Engineering <releng@fedoraproject.org> - 2.15.0-3
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_24_Mass_Rebuild
+
 * Mon Nov 30 2015 Orion Poplawski <orion@cora.nwra.com> - 2.15.0-2
 - Add patch for gsl 2 support
 
@@ -458,7 +562,7 @@ make test
 - rebuild
 
 * Fri Mar 10 2006 Jason Vas Dias <jvdias@redhat.com> - 2.4.2-4
-- Further code cleanup & CFLAGS settings required to enable tests 
+- Further code cleanup & CFLAGS settings required to enable tests
   to succeed on all platforms
 
 * Thu Mar 09 2006 Jason Vas Dias <jvdias@redhat.com> - 2.4.2-4
@@ -540,4 +644,3 @@ make test
 
 * Fri Jun 07 2002 cturner@redhat.com
 - Specfile autogenerated
-
