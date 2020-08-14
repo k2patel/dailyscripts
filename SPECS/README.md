@@ -1,87 +1,139 @@
-- hdf - 4.2.12 -> 4.2.13
-  * https://support.hdfgroup.org/ftp/HDF/releases/ReleaseFiles/hdf-4.2.13-RELEASE.txt
 
-- hdf5 - 1.8.15.1 -> 1.10.2
-  * https://support.hdfgroup.org/ftp/HDF5/releases/ReleaseFiles/hdf5-1.10.0-RELEASE.txt
-  * https://support.hdfgroup.org/ftp/HDF5/releases/ReleaseFiles/hdf5-1.10.1-RELEASE.txt
-  * https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.2/src/hdf5-1.10.2-RELEASE.txt
+ - SZIP -> (2.1.1 -> 2.1.1-1 )
+  * Added CMake support
 
-- armadillo - 7.200 ->  8.600.0
-  * https://gitlab.com/conradsnicta/armadillo-code/tree/8.600.x
+ - HDF4 -> (4.2.13 -> 4.2.15)
+  * Updated xdr to 4.9.1
+  * Several memory leaks are fixed
+  * Full Details at https://bitbucket.hdfgroup.org/projects/HDFFR/repos/hdf4/browse/release_notes
 
-- libpnetcdf - 1.7.0
-  * https://parallel-netcdf.github.io/Release_notes/1.9.0.html
+ - HDF5 -> (1.10.2 -> 1.12.0)
+  * mpich to 3.2 and openmpi3
+  * Many functional improvement with new methods
+  * RFC THG 2017-07-07.v7 (H5Sencode / H5Sdecode Format Change)
+  * Virtual Object Layer
+  * Functions were modified in HDF5 version 1.12 to support a token type used in the Virtual Object Layer (VOL) and to enable 64-bit selection encodings.
+  * fixed issue with netcdf build include file extension
+  * https://portal.hdfgroup.org/display/HDF5/Migrating+from+HDF5+1.10+to+HDF5+1.12
+  * https://github.com/HDFGroup/hdf5/blob/develop/release_docs/RELEASE.txt
 
-- pnetcdf - 1.7.0
-  * This library is now removed or not being update / managed since netcdf 4.4.x has inbuilt parallel netcdf support
+ - Armadillo -> (8.600.0 -> 9.900.2)
+  * https://gitlab.com/conradsnicta/armadillo-code/-/compare/8.600.x...9.900.x
 
-- netcdf - 4.4.1 -> 4.6.1
-  * https://www.unidata.ucar.edu/software/netcdf/docs/RELEASE_NOTES.html
+ - Pnetcdf (Parallel-netcdf) -> (1.7.0 -> 1.12.1)
+  * Support added for both mpi platform
+  * A new command-line option `-t` is added to utility program `cdfdiff` to compare variable differences within a tolerance.
+  * Fix strict aliasing bug when building PnetCDF with -O3 flag.
+  * In dpeth https://github.com/Parallel-NetCDF/PnetCDF/blob/master/RELEASE_NOTES
 
-- netcdf-fortran 4.4.4
-  * Newly Introduced to support ncview
+ - NetCDF -> (4.6.1 -> 4.7.4)
+  * Support for HDF5-1.12.0.
+  * Support for multiple filters per variable.
+  * nc_inq_var_szip now retuns 0 for parameter values if szip is not in use for the variable.
+  * Parallel I/O with filters is allowed for HDF5-1.10.3 and later.
+  * Support for zlib compression for parallel I/O writes, if HDF5 version is 1.10.3 or greater.
+  * Support for szip compression when writing data (including writing in parallel if HDF5 version is 1.10.3 or greater)
+  * Support for compact storage option for small variables in netCDF/HDF5 files.
+  * More Details at https://www.unidata.ucar.edu/software/netcdf/docs/RELEASE_NOTES.html
 
-- netcdf-perl - 1.2.4
-  * Unidata's NetCDF Perl package is no longer being actively maintained. Unidata will continue to provide support for netCDF Perl.
-  * This is mark deprecated and soon removed if you use perl script for NetCDF please start moving to new programming language or alternate method.
+ - NetCDF-Fortran -> (4.4.4 -> 4.5.3)
+  * Added nf90_inq_format to the F90 API
+  * Added support for HDF5 compact storage
+  * Added support for creating netCDF/HDF5 files with szip compression
+  * Fixed bug in the setting of file cache preemption for netCDF-4 files
+  * Bugfixes to bring netCDF-Fortran in line with the features in netCDF-C.
+  * More detailed information at https://github.com/Unidata/netcdf-fortran/blob/master/RELEASE_NOTES.md
 
-- nco - 4.6.0 -> 4.7.5
-  * http://nco.sourceforge.net/ChangeLog
-  * ncap2 supercedes and is backwards-compatible with ncap which is now deprecated.
+ - NetCDF-Perl -> (1.2.4)
+  * Rebuilt to support new netcdf.
+  * LAST RELEASE (It will be removed from all DAAC system on next build)
+  * This is no longer maintained and does not support more recent changes to the NetCDF.
 
-- ncview - 2.1.7
-  * No change
+ - nco -> (4.7.5 -> 4.9.3)
+  * GPU-offloading and enable-optimize options
+  * Fix FLG_ILV spuriously set despite no ilv argument
+  * vectorization directives
+  * More detailed at https://github.com/nco/nco/blob/master/doc/ChangeLog
 
-- proj - 4.9.2 -> 5.1.0
-  * https://www.osgeo.org/foundation-news/realease-proj-5-1/
-  * https://proj4.org/development/migration.html
+ - ncview -> (2.1.7)
+  * No change, but recompiled to accomodate new library.
 
-- grib_api - 1.16.0 -> 1.27.0
-  * https://confluence.ecmwf.int/display/GRIB/History+of+Changes#HistoryofChanges-Version1.27.0(June2018)
-  * https://confluence.ecmwf.int//display/ECC/ecCodes+Home
-  * GRIB encoding and decoding has been particularly well tested within the IFS and ecCodes replaces GRIB-API in the next operational cycle update.
+ - Proj -> (5.1.0 -> 5.2.0)
+  * datumgrids updaated to 1.8
+  * Many bug fixes
+  * Proj cannot be upgraded to latest stable due to dependent OS package limited to older version.
+  * More detailed information https://github.com/OSGeo/PROJ/blob/5.2.0/ChangeLog
 
-- g2clib - 1.4.0 -> 1.6.0
-  * https://raw.githubusercontent.com/NCAR/ncl/master/external/g2clib-1.6.0/CHANGES
+ - grib_api -> eccodes -> (2.18.0)
+  * Details list version by version https://confluence.ecmwf.int/display/ECC/History+of+Changes
 
-- cdo - 1.7.2 -> 1.9.4
-  * https://code.mpimet.mpg.de/news/410
+ - g2clib -> (1.6.0)
+  * No change, but needed to rebuild to accomodate changes.
 
-- libgeotiff - 1.4.1 -> 1.4.2
-  * https://svn.osgeo.org/metacrs/geotiff/trunk/libgeotiff/ChangeLog
+ - cdo -> (1.9.4 -> 1.9.8)
+  * Proj 4 to 6 API Migration
+  * smooth/smooth9: Added support for gridtype PROJECTION [Feature #9202]
+  * Expr: Added function rand() and isMissval()
+  * Remap: Added support for Gaussian reduced grids
+  * trend, detrend: Added parameter equal=false for unequal timesteps
+  * Option --no_remap_weights: Switch off generation of remap weights
+  * More details at https://code.mpimet.mpg.de/projects/cdo
 
-- freexl - 1.0.2 -> 1.0.5
-  * https://www.gaia-gis.it/fossil/freexl/timeline
+ - libgeotiff -> (1.4.2 -> 1.4.4)
+  * Many bug fixes
+  * Cannot upgrade to latest since it require proj v6 or up.
+  * More detailed changelog https://github.com/OSGeo/libgeotiff/blob/1.4.3/libgeotiff/ChangeLog
 
-- libspatialite - 4.3.0a
-  * No change
-  
-- ogdi - 3.2.0
-  * No change
+ - freexl -> (1.0.5 -> 1.0.6)
+  * Please see https://www.gaia-gis.it/fossil/freexl/timeline
 
-- gdal - 2.1.1 -> 2.3.1
-  * https://trac.osgeo.org/gdal/wiki/Release/2.3.1-News
-  
-- ncl - 6.3.0 -> 6.5.0
-  * http://www.ncl.ucar.edu/current_release.shtml
+ - libspatialite -> (4.3.0a)
+  * No change, but needed to rebuild to accomodate changes.
+  * Cannot move to 5.x branch because of dependency from OS.
 
-- mapserver 7.0.2 -> 7.2.0
-  * https://www.mapserver.org/development/changelog/changelog-7-2.html#changelog-7-2
-  
-- ncview
-  * No Change
+ - ogdi -> (3.2.0 -> 4.1.0)
+  * ogdi/driver/vrf/feature.c, object.c, vrf.h: make sure to take into
+   account tile id when merging feature segments, and deal with situations
+   where consecutive segments of same feature in edge table are not
+   mergeable. Needed on some DNC products.
+  * various changes to support Win64 and MSVC 2015
 
-- perl-PDL 2.15.0 -> 2.19.0
-  * https://metacpan.org/changes/distribution/PDL
-  
-- perl-PDL-NetCDF
-  * No Change
-  
-- wgrib
-  * No Change
-  
-- wgrib2 - 2.0.5 -> 2.0.7
-  * http://ftp.cpc.ncep.noaa.gov/wd51we/wgrib2/Changes
-  
-- netcdf4-python - 1.2.7 -> 1.4.1
-  * https://github.com/Unidata/netcdf4-python/blob/master/Changelog
+ - libkml -> (Newly added -> 1.3.0)
+
+ - gdal -> (2.3.1 -> 2.4.4)
+  * PROJ requirement does not allow to compile 3.x
+  * Added libkml support
+  * In details changes are at https://github.com/OSGeo/gdal/commits/v2.4.4/gdal/doc
+
+ - ncl -> (Discontinued)
+  * NCL nolonger able to compile against new library.
+
+ - mapserver -> (7.2.0 -> 7.6.1)
+  * Ruby binding for mapserver/mapscript dropped.
+  * https://www.mapserver.org/development/changelog/index.html
+
+ - ncview -> (2.1.7)
+  * Rebuild to accomodate library change.
+
+ - perl-PDL -> (2.19.0 -> 2.21.0)
+  * Proj support dropped "https://bugzilla.redhat.com/show_bug.cgi?id=839651"
+
+ - perl-PDL-NetCDF -> (4.20)
+  * No change / rebuilt to accomodate new library.
+
+ - wgrib -> (1.8.1)
+  * No change / rebuilt to accomodate new library
+
+ - wgrib2 -> (2.0.7 -> 2.0.8)
+  * ens_processing: fixed spread calculation (one pass -> 2 pass calculation)
+  * ndate, -ndates: added with mn (minutes) support
+  * set_date, -time_processing: now supports mn time offsets added spectral option to -new_grid
+  * new_grid: removed loop to determine ibi
+  * set_ftime2: works with pdt 2, 3, 4, 5, 6, 9, 10, 12, 13, 15, 41, 43
+  * alarm will clear alarm in finalize stage, init.c added include <string.h> in
+
+ - netcdf4-python -> (1.4.1 -> 1.5.3)
+  * In depth https://github.com/Unidata/netcdf4-python/blob/master/Changelog
+
+ - lastools -> (dcb0cbb)
+  * New package (request was created long ago)
