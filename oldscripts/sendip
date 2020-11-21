@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Spyder Editor
@@ -7,14 +7,15 @@ This temporary script file is located here:
 /home/k2patel/bin/sendip
 """
 
-import urllib2
+import urllib3
 import smtplib
+import certifi
 
 
 # CUSTOMIZATION START
 
 # Define your current IP here.
-currentIP = "69.126.143.155"
+currentIP = "35.237.176.83"
 # Define you email id to notify
 toaddrs = "k2patel@gmail.com"
 # Define Source Email ID
@@ -23,10 +24,10 @@ fromaddr = "k2patel@k2patel.in"
 
 # CUSTOMIZATION END
 
-url = 'http://icanhazip.com'
-req = urllib2.Request(url)
-res = urllib2.urlopen(req)
-newIP = res.read()
+url = 'https://ipv4.icanhazip.com'
+http = urllib3.PoolManager(ca_certs=certifi.where())
+req = http.request('GET', url)
+newIP = req.data.decode('utf-8').rstrip()
 
 #print newIP.rstrip()
 #print currentIP.rstrip()
