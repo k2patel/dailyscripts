@@ -1,0 +1,11 @@
+[DEFAULT]
+country: US
+state: Tennessee
+location: Knoxville
+Organization: k2patel.in
+OU: IT
+search: ['term']
+
+[DATA]
+domainpresent: False
+domain: .k2patel.in
