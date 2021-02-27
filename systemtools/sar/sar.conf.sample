@@ -1,0 +1,5 @@
+[DEFAULT]
+SMTP_SERVER = 192.168.1.1
+SMTP_PORT = 25
+DEFAULT_SENDER = test@test.com
+DEFAULT_RECIPIENT = where@test.com
