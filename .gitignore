@@ -1,1 +1,5 @@
 .vscode*
+*config.py
+*__pycache__
+*gencert.conf
+*systems

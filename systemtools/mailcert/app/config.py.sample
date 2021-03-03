@@ -1,0 +1,9 @@
+from pydantic import BaseSettings
+
+class Settings(BaseSettings):
+    fromaddr: str = 'test@test.com'
+    toaddr: str = 'support@yahoo.com'
+    smtphost: str = 'smtp.yahoo.com'
+    smtpport: str = '25'
+
+settings = Settings()
