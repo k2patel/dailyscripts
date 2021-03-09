@@ -1,0 +1,11 @@
+[DEFAULT]
+country: US
+state: Tennessee
+location: Knoxville
+Organization: k2patel.in
+OU: IT
+cert_location: /etc/pki/tls/certs
+key_location: /etc/pki/tls/private
+apiUser: test
+apiToken: asdfas8d7wurhqeurqw7r8yqwerbqwerqw8e7yrqw
+endpoint: https://api.k2patel.in
