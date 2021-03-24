@@ -3,9 +3,6 @@
 # Small script to generate key and certificate for API based auth
 # Set script run using cron monthly (managecert.py).
 # Update configuration file and you are good to go.
-# gencert.py - generate certificatre and key.
-# submit.py - submit certificate to API for authorization.
-# managecert.py - use generate certificate script to create script and if certificate is expire in two month renewcert.py used.
 # License MIT
 
 from datetime import datetime

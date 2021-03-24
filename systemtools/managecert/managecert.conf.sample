@@ -1,11 +1,29 @@
+## Configuration file does not save any comment if 'updateconfig' set to yes
+## This is sample configuration for your reference please update as needed.
 [DEFAULT]
-country: US
-state: Tennessee
-location: Knoxville
-Organization: k2patel.in
-OU: IT
-cert_location: /etc/pki/tls/certs
-key_location: /etc/pki/tls/private
-apiUser: test
-apiToken: asdfas8d7wurhqeurqw7r8yqwerbqwerqw8e7yrqw
-endpoint: https://api.k2patel.in
+country = US
+state = Tennessee
+location = Knoxville
+Organization = k2patel.in
+OU = k2patel.in
+cert_location = /etc/pki/tls/certs
+key_location = /etc/pki/tls/private
+apiUser = test
+apiToken = asdfas8d7wurhqeurqw7r8yqwerbqwerqw8e7yrqw
+endpoint = https://apicert.test.in/certs
+
+[AUTH]
+endpoint = https://apitoken.test.in/token
+# print token if renewed 0 = no, 1 = yes
+printtoken = 1
+# Update config file if token is renewed, 0 = no, 1 = yes
+updateconfig = 1
+
+[EMAIL]
+enablenotify = '1'
+recepient = echo@echo.com
+sender = tester@script.com
+custom_message = 'Please update configuration on some automation'
+send_newtoken = 1
+send_oldtoken = 1
+subject_prefix = 'SMTP AUTH TOKEN'
