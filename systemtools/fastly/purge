@@ -1,0 +1,113 @@
+#!/usr/bin/env python3
+
+import argparse
+import requests, os, json
+
+def get_service_list(token):
+    url = 'https://api.fastly.com/service'
+    headers = {
+        'Content-Type': 'application/json',
+        'Fastly-Key': "{}".format(token)
+    }
+    resp = requests.get(url, headers=headers, timeout=60)
+    data = json.loads(resp.text)
+    return data
+
+def filter_list(serviceList, searchTerm):
+    filteredList = []
+    for value in serviceList:
+        if searchTerm.lower() in value.get('name'):
+            filteredList.append(value)
+    return filteredList
+
+def get_domain_list(token, serviceId, serviceVersion):
+    url = 'https://api.fastly.com/service/' + str(serviceId) + '/version/' + str(serviceVersion) + '/domain/check_all'
+    headers = {
+        'Content-Type': 'application/json',
+        'Fastly-Key': "{}".format(token)
+    }
+    resp = requests.get(url, headers=headers, timeout=60)
+    data = json.loads(resp.text)
+    dataList = []
+    for value in data:
+        dataList.append(value[0].get('name'))
+    return dataList
+
+def purge_service(token, purgeType, purgeUrl='', serviceId='', purgeAll=False):
+    url = 'https://api.fastly.com/purge'
+    if purgeType == 'hard':
+        headers = {
+            'Content-Type': 'application/json',
+            'Fastly-Key': "{}".format(token)
+        }
+    else:
+        headers = {
+            'fastly-soft-purge': '1',
+            'Content-Type': 'application/json',
+            'Fastly-Key': "{}".format(token)
+        }
+    if not purgeUrl == '':
+        location = 'https://api.fastly.com/purge/' + purgeUrl
+        resp = requests.post(location, headers=headers, timeout=60)
+        print(purgeUrl, end=": ")
+        print(resp.json())
+    elif not serviceId == '' and purgeAll:
+        location = 'https://api.fastly.com/service/' + serviceId + '/purge_all'
+        resp = requests.post(location, headers=headers, timeout=60)
+        print(serviceId, end=": ")
+        print(resp.json())
+    else:
+        print("Purge argument combination does not work using this script try CLI or UI.")
+        print("Try purgin All, while providing search term you can only purge all.")
+
+def main(args, token):
+    if args.list and args.service:
+        serviceList = get_service_list(token)
+        filteredList = filter_list(serviceList, args.service)
+        for service in filteredList:
+            print('{:<40} {:<5} {:<2}'.format(service.get('name'),
+                  service.get('id'), service.get('version')))
+            print('\t' + str(get_domain_list(token, service.get('id'), service.get('version'))))
+    elif args.list and not args.service:
+        serviceList = get_service_list(token)
+        for service in serviceList:
+            print('{:<40} {:<5} {:<2}'.format(service.get('name'),
+                  service.get('id'), service.get('version')))
+            print('\t' + str(get_domain_list(token,
+                  service.get('id'), service.get('version'))))
+    elif not args.url == '' and args.purge:
+        purge_service(token=token, purgeUrl=args.url, purgeType=args.type)
+    elif args.purge and not args.service == '':
+        serviceList = get_service_list(token)
+        filteredList = filter_list(serviceList, args.service)
+        index_lable = json.loads('{"id": "0", "type": "lable", "versions": [{"service_id": "0"}, {"service_id": "0"}], "version": 0, "name": "all", "customer_id": "vroom"}')
+        filteredList.insert(0, index_lable)
+        for in_dex, value in enumerate(filteredList):
+            print(in_dex, value.get('name'), value.get('id'))
+        selection = int(input("Enter selection: "))
+        if selection == 0:
+            for selIndex in range(1, len(filteredList)):
+                purge_service(token=token, serviceId=filteredList[selIndex].get(
+                    'id'), purgeType=args.type, purgeAll=args.all)
+        else:
+            purge_service(token=token, serviceId=filteredList[selection].get('id'), purgeType=args.type, purgeAll=args.all)
+    else:
+        parser.print_help()
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(prog="purge", description="List / purge fastly services.")
+    parser.add_argument('--service', '-s', help="Provide string to search.", nargs='?', default="")
+    parser.add_argument('--list', '-l', help="List all services.", action="store_true", default=False)
+    parser.add_argument('--purge', '-p', help="string to match services, must provide '-s' argument.", action="store_true", default=False)
+    parser.add_argument('--all', '-a', help="full purge of all services", action="store_true", default=False)
+    parser.add_argument('--type', '-t', help="Type of perge needed, default is 'hard' but you can define type.", nargs='?', default="hard")
+    parser.add_argument('--url', '-u', help="Provide URL to purge from fastly", nargs='?', default='')
+    parser.add_argument('--config', '-c', help="Configuration file location, default to '~/.fastlyctl_token'.",
+                        default=os.path.expanduser('~') + '/.fastlyctl_token')
+
+    args = parser.parse_args()
+    with open(args.config) as f:
+        token = f.readline().strip()
+    f.close()
+
+    main(args, token)
