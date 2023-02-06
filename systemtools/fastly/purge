@@ -80,7 +80,7 @@ def main(args, token):
     elif args.purge and not args.service == '':
         serviceList = get_service_list(token)
         filteredList = filter_list(serviceList, args.service)
-        index_lable = json.loads('{"id": "0", "type": "lable", "versions": [{"service_id": "0"}, {"service_id": "0"}], "version": 0, "name": "all", "customer_id": "vroom"}')
+        index_lable = json.loads('{"id": "0", "type": "lable", "versions": [{"service_id": "0"}, {"service_id": "0"}], "version": 0, "name": "all", "customer_id": ' + args.customer_id + '}')
         filteredList.insert(0, index_lable)
         for in_dex, value in enumerate(filteredList):
             print(in_dex, value.get('name'), value.get('id'))
@@ -102,6 +102,7 @@ if __name__ == "__main__":
     parser.add_argument('--all', '-a', help="full purge of all services", action="store_true", default=False)
     parser.add_argument('--type', '-t', help="Type of perge needed, default is 'hard' but you can define type.", nargs='?', default="hard")
     parser.add_argument('--url', '-u', help="Provide URL to purge from fastly", nargs='?', default='')
+    parser.add_argument('--customer_id', '-i', help="Usually a company name", nargs='?', default='' )
     parser.add_argument('--config', '-c', help="Configuration file location, default to '~/.fastlyctl_token'.",
                         default=os.path.expanduser('~') + '/.fastlyctl_token')
 
