@@ -3,7 +3,7 @@
 ## Instructions
 - Script holder for database managementg related scripts.
 - this script can be wrapped around to produce meaning full automated way.
-  - ```for sec in `./list_secrets -s db` ; do ./print_db_secret -s ${sec} ; done```
+  - ```for sec in `./list_secrets -s db` ; do ./print_secret -s ${sec} ; done```
 
 ```mermaid
 graph TD;
