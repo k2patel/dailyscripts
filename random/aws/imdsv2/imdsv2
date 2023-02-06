@@ -1,0 +1,62 @@
+#!/usr/bin/env python3
+
+import boto3, argparse
+
+def set_imdsv2_required(instance_id):
+    client.modify_instance_metadata_options(
+        InstanceId=instance_id,
+        HttpTokens='required',
+        HttpPutResponseHopLimit=2,
+        HttpEndpoint='enabled'
+    )
+    print("IMDSv2 has been turned on for " + instance_id)
+
+def update_instances(force_en):
+    for instance in ec2.instances.all():
+        if instance.metadata_options['HttpTokens'] == 'optional':
+            set_imdsv2_required(instance.instance_id)
+        if force_en:
+            set_imdsv2_required(instance.instance_id)
+
+def list_instances_require_update(prn_id):
+    for instance in ec2.instances.all():
+        if instance.metadata_options['HttpTokens'] == 'optional' and instance.state['Name'] != 'terminated':
+            if not prn_id:
+                try:
+                    for tag in instance.tags:
+                        if tag['Key'] == 'Name':
+                            if len(str(tag['Value'])):
+                                print(str(tag['Value']))
+                            else:
+                                print(instance.instance_id)
+                except:
+                    print(instance.instance_id)
+            else:
+                print(instance.instance_id)
+
+def main(args):
+    if args.update:
+        print("Updating to IDMSv2...")
+        update_instances(force_en=args.force)
+    elif args.list:
+        list_instances_require_update(prn_id=args.id)
+    else:
+        parser.print_help()
+
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(prog="imdsv2", description="List / Enable imdsv2")
+    parser.add_argument('--list', help="List system only (default)", action="store_true", default=True)
+    parser.add_argument('--update', help="Enforce IMDSV2", action="store_true", default=False)
+    parser.add_argument('--id', help="Do not print the name from tag", action="store_true", default=False)
+    parser.add_argument('--force', help="Force update the tag", action="store_true", default=False)
+    parser.add_argument('--region', help="Override region specified in profile", default=None)
+    args = parser.parse_args()
+
+    session = boto3.Session(profile_name='default', region_name=args.region)
+    ec2 = session.resource('ec2')
+    client = session.client('ec2')
+
+    main(args)
+
