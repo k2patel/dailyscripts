@@ -1,54 +1,110 @@
 #!/usr/bin/env python3
-import requests, os, argparse
+# 
+"""
+Generate copy paste environment variable for terraform.
+searching given project in gitlab.
+"""
+
+
+import os
+import argparse
+import requests
 # import subprocess
 
 # Set your GitLab personal access token and the GitLab instance URL
 GITLAB_TOKEN = os.getenv('GITLAB_ACCESS_TOKEN')
+# Gitlab URL
 GITLAB_URL = os.getenv('GITLAB_URL')
 
+
 def search_project(query):
+    """
+    Search the project and return the JSON output
+    """
     headers = {'Private-Token': GITLAB_TOKEN}
     params = {'search': query}
-    
-    response = requests.get(f'{GITLAB_URL}/api/v4/projects', headers=headers, params=params)
-    
+    response = requests.get(
+        GITLAB_URL + '/api/v4/projects',
+        headers=headers,
+        params=params,
+        timeout=60
+    )
     if response.status_code == 200:
         projects = response.json()
         return projects
-    else:
-        print(f"Error: {response.status_code} - {response.text}")
-        return None
+    print("Error: {} - {}".format(response.status_code, response.text))
+    return None
+
+
+def format_string(format_str, *args):
+    """
+    Return a formatted version of S, using substitutions from args and kwargs.
+    The substitutions are identified by braces ('{' and '}').
+    """
+    return format_str.format(*args)
+
 
 def main(args):
+    """
+    Main function called from the Self.
+    """
     if args.search:
         projects = search_project(args.search)
-        
+        if args.environment:
+            environment = str(args.environment + '/')
+        else:
+            environment = ''
         if projects:
             print("Search results:")
             for project in projects:
-                # print(f"ProjectID: {project['id']} - Project: {project['name']} - {project['web_url']}")
-                # subprocess.run(f'export {PROJECT_ID}={project['id']}', shell=True)
-                # subprocess.run(f'export {PROJECT_SUB_NAME}={project['name']}', shell=True)
-                # subprocess.run(f'export {PROJECT_SUB_NAME}={project['name']}', shell=True)
-                # subprocess.run(f'export {PROJECT_SUB_NAME}={project['name']}', shell=True)
-                print(f"== {project['name']} ==")
-                print(f"export TF_HTTP_ADDRESS={project['_links']['self']}/terraform/state/{project['name']}")
-                print(f"export TF_HTTP_LOCK_ADDRESS={project['_links']['self']}/terraform/state/{project['name']}/lock")
-                print(f"export TF_HTTP_UNLOCK_ADDRESS={project['_links']['self']}/terraform/state/{project['name']}/lock")
-                print(f'export TF_HTTP_LOCK_METHOD="POST"')
-                print(f'export TF_HTTP_UNLOCK_METHOD="DELETE"')
-                print(f'export TF_HTTP_USERNAME="${{GITLAB_USERNAME}}"')
-                print(f'export TF_HTTP_USERNAME="${{GITLAB_ACCESS_TOKEN}}"')
-                print(f'export TF_HTTP_RETRY_WAIT_MIN=5')
-                print(f' ')
+                if args.override is not None:
+                    state_name = args.override
+                else:
+                    state_name = project['name']
+                print("== {} ==".format(project['name']))
+                print("export TF_HTTP_ADDRESS=" + format_string(
+                    "{}/terraform/state/{}{}",
+                    project['_links']['self'],
+                    environment,
+                    state_name))
+                print("export TF_HTTP_LOCK_ADDRESS=" + format_string(
+                    "{}/terraform/state/{}{}/lock",
+                    project['_links']['self'],
+                    environment,
+                    state_name))
+                print("export TF_HTTP_UNLOCK_ADDRESS=" + format_string(
+                    "{}/terraform/state/{}{}/lock",
+                    project['_links']['self'],
+                    environment,
+                    state_name))
+                print('export TF_HTTP_LOCK_METHOD="POST"')
+                print('export TF_HTTP_UNLOCK_METHOD="DELETE"')
+                print('export TF_HTTP_USERNAME="${GITLAB_USERNAME}"')
+                print('export TF_HTTP_PASSWORD="${GITLAB_ACCESS_TOKEN}"')
+                print('export TF_HTTP_RETRY_WAIT_MIN=5')
+                print(' ')
         else:
             print("No projects found.")
     else:
         parser.print_help()
 
 
-if __name__ == "__main__" :
-    parser = argparse.ArgumentParser(prog="tf_env_gen", description="generate environment paste for specific project")
-    parser.add_argument('--search', '-s', help="provide string to search for all project,\n limit search result by adding longer string to match")
-    args = parser.parse_args()
-    main(args)
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        prog="tf_env_gen",
+        description="generate environment paste for specific project")
+    parser.add_argument(
+        '--search',
+        '-s',
+        help="""provide string to search all project (uses gitlab search),
+        limit search result by adding longer string to match.""")
+    parser.add_argument(
+        '--override',
+        '-o',
+        help="override state file name, default is 'project name'",
+        default=None)
+    parser.add_argument(
+        '--environment',
+        '-e',
+        help="Enable / Disable environment variable")
+    main(args=parser.parse_args())
