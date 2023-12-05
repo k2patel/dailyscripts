@@ -1,0 +1,196 @@
+#!/usr/bin/env python3
+# 
+"""
+Manage state of the instance for specific service in consul.
+"""
+
+
+import os
+import argparse
+import requests
+
+
+def format_string(format_str, *args):
+    """
+    Return a formatted version of S, using substitutions from args and kwargs.
+    The substitutions are identified by braces ('{' and '}').
+    """
+    return format_str.format(*args)
+
+
+def main(
+        args,
+        consul_token,
+        consul_CA_cert,
+        client_cert,
+        client_key):
+    # Define the Consul API URL
+    if args.node is not None:
+        consul_api_url = "https://" + args.node + "." + args.domain + "/v1"
+    else:
+        consul_api_url = "https://consul.service.consul/v1"
+    # Define headers with the Consul ACL token
+    headers = {
+        'X-Consul-Token': consul_token,
+        'Content-Type': 'application/json'
+    }
+
+    if args.status is not None:
+        url = consul_api_url + "/health/checks/" + args.status
+        try:
+            response = requests.get(url,
+                                    headers=headers,
+                                    cert=(client_cert, client_key),
+                                    verify=consul_CA_cert
+                                    )
+            response.raise_for_status()
+            # Print the list of services
+            print("Service instances for {}:".format(args.status))
+            for instance in response.json():
+                print(format_string(
+                    "Node Name: {0[Node]} | Instance ID: {0[ServiceID]} | Status: {0[Status]}",
+                    instance
+                ))
+            exit(0)
+        except requests.exceptions.RequestException as e:
+            print("Error: {}".format(e))
+            exit(1)
+    elif args.maintanance is not None:
+        if args.instance_id is None and args.node is None:
+            print("Error: --instance-id/-i and --node/-n is required for --maintanance/-m")
+        else:
+            url = consul_api_url + "/agent/service/maintenance/" + args.instance_id
+        if args.maintanance == "enable":
+            params = {
+                "enable": True,
+                "reason": "Maintenance"
+            }
+        else:
+            params = {
+                "enable": False,
+                "reason": "Maintenance"
+            }
+        try:
+            response = requests.put(url,
+                                    headers=headers,
+                                    cert=(client_cert, client_key),
+                                    verify=consul_CA_cert,
+                                    params=params
+                                    )
+            response.raise_for_status()
+            print("Service instance {} maintenance mode {}'d".format(args.instance_id, args.maintanance))
+            exit(0)
+        except requests.exceptions.RequestException as e:
+            print("Error: {}".format(e))
+            exit(1)
+    else:
+        if not args.service and args.list_instances:
+            url = consul_api_url + "/catalog/services"
+        else:
+            # Create the URL for the specific service instance
+            url = consul_api_url + "/catalog/service/" + args.service
+            # Send the GET request to get the list of services
+        try:
+            response = requests.get(url,
+                                    headers=headers,
+                                    cert=(client_cert, client_key),
+                                    verify=consul_CA_cert
+                                    )
+            response.raise_for_status()
+            # Print the list of services
+            if not args.service:
+                print("Services:")
+                for service in response.json():
+                    print(format_string(
+                        "Service Name: {0}",
+                        service
+                    ))
+                exit(0)
+            else:
+                print("Service instances for {}:".format(args.service))
+                for instance in response.json():
+                    print(format_string(
+                        "Node Name: {0[Node]} | Instance ID: {0[ServiceID]} | Address: {0[Address]}",
+                        instance
+                    ))
+                exit(0)
+        except requests.exceptions.RequestException as e:
+            print("Error: {}".format(e))
+            exit(1)
+
+
+if __name__ == "__main__":
+    # Get the Consul ACL token from the environment variable
+    consul_token = os.getenv("CONSUL_HTTP_TOKEN")
+    consul_CA_cert = os.getenv("CONSUL_CACERT")
+    client_cert = os.getenv("CONSUL_CLIENT_CERT")
+    client_key = os.getenv("CONSUL_CLIENT_KEY")
+    domain = os.getenv("CONSUL_DOMAIN")
+
+    if not consul_token:
+        print("Error: CONSUL_TOKEN environment variable is not set.")
+        exit(1)
+    if not consul_CA_cert:
+        print("Error: CONSUL_CACERT environment variable is not set.")
+        exit(1)
+    if not client_cert:
+        print("Error: CONSUL_CLIENT_CERT environment variable is not set.")
+        exit(1)
+    if not client_key:
+        print("Error: CONSUL_CLIENT_KEY environment variable is not set.")
+        exit(1)
+    if not domain:
+        print("Error: CONSUL_DOMAIN environment variable is not set.")
+        exit(1)
+    # Parse command-line arguments
+    parser = argparse.ArgumentParser(
+        description="Consul script to manage maintanace mode, list services, status of service."
+    )
+    parser.add_argument(
+        "--service",
+        "-s",
+        help="Name of the service instance to mark"
+    )
+    parser.add_argument(
+        "--maintanance",
+        "-m",
+        choices=["enable", "disable"],
+        help="Desired maintanance state change (enable/disable), requires --instance-id/-i and --node/-n"
+    )
+    parser.add_argument(
+        "--status",
+        "-st",
+        help="Get the status of the service instances",
+        default=None
+    )
+    parser.add_argument(
+        "--node",
+        "-n",
+        help="Name of the node where instance is defined",
+        default=None
+    )
+    parser.add_argument(
+        "--domain",
+        "-d",
+        help="Domain name of the service node",
+        default=domain
+    )
+    parser.add_argument(
+        "--instance-id",
+        "-i",
+        help="ID of the service instance to mark, required when --maintanance/-m is used"
+    )
+    parser.add_argument(
+        "--list-instances",
+        "-l",
+        action="store_true",
+        help="List all services when combined with --service/-s list all instances of a service (default)",
+        default=True
+    )
+    main(
+        args=parser.parse_args(),
+        consul_token=consul_token,
+        consul_CA_cert=consul_CA_cert,
+        client_cert=client_cert,
+        client_key=client_key
+    )
