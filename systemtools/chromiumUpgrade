@@ -1,0 +1,136 @@
+#!/usr/bin/env python3
+
+import argparse
+import os
+import shutil
+import stat
+import subprocess
+import zipfile
+from io import StringIO
+
+import pandas
+import requests
+
+SNAPSHOTS_URL = "https://commondatastorage.googleapis.com/chromium-browser-snapshots"
+LAST_CHANGE_FILE = "LAST_CHANGE"
+APP_NAME = "Chromium.app"
+APPLICATIONS_DIR = "/Applications"
+
+
+def latest_version(architecture):
+    result = requests.get(SNAPSHOTS_URL + "/" + architecture + "/" + LAST_CHANGE_FILE)
+    return result.text
+
+
+def get_previous(architecture, latest_version):
+    short_version = int(latest_version[:3])
+    result = requests.get(
+        SNAPSHOTS_URL
+        + "/?prefix="
+        + architecture
+        + "/"
+        + str(short_version - 1)
+        + "&delimiter=/"
+    )
+    document = pandas.read_xml(StringIO(result.text))
+    list = document["Prefix"].dropna().tolist()
+    return str("".join(filter(str.isdigit, max(list))))
+
+
+def download(version, architecture, file):
+    url = SNAPSHOTS_URL + "/" + architecture + "/" + version + "/" + file
+    with requests.get(url, stream=True) as r:
+        r.raise_for_status()
+        with open(file, "wb") as f:
+            for chunk in r.iter_content(chunk_size=8192):
+                # If you have chunk encoded response uncomment if
+                # # and set chunk_size parameter to None.
+                # #if chunk:
+                f.write(chunk)
+            return file
+
+
+def install_chromium(downloaded_file):
+    extract_dir = os.getcwd()
+    subprocess.run(
+        ["/usr/bin/unzip", "-q", downloaded_file, "-d", extract_dir], check=True
+    )
+
+    # Detect top-level folder
+    with zipfile.ZipFile(downloaded_file, "r") as zip_ref:
+        top_level = {p.split("/")[0] for p in zip_ref.namelist() if "/" in p}
+        top_folder = next(iter(top_level)) if top_level else None
+
+    if not top_folder:
+        raise RuntimeError("Could not detect top-level folder inside ZIP archive.")
+
+    dest_app_path = os.path.expanduser(f"~/Applications/{APP_NAME}")
+    src_app_path = os.path.join(extract_dir, top_folder, APP_NAME)
+
+    shutil.rmtree(dest_app_path, ignore_errors=True)
+    shutil.move(src_app_path, dest_app_path)
+
+    chromium_bin = os.path.join(dest_app_path, "Contents/MacOS/Chromium")
+    st = os.stat(chromium_bin)
+    os.chmod(chromium_bin, st.st_mode | stat.S_IEXEC)
+    # Cleanup
+    os.remove(downloaded_file)
+    shutil.rmtree(top_folder)
+    print(f"Installed Chromium successfully at {dest_app_path}")
+
+
+def main(previous, version, architecture, file):
+    if version:
+        print("value in version is: " + str(version))
+    if previous:
+        version = get_previous(
+            architecture=architecture, latest_version=latest_version(architecture)
+        )
+    if not version and not previous:
+        version = latest_version(architecture)
+    print(f"Downloading version: {version}")
+    downloaded_file = download(version, architecture, file)
+    install_chromium(downloaded_file)
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        prog="chromeUpgrade",
+        description="Upgrade Chromium Application, If there is no argument it will Choose the Latest Snapshot",
+    )
+    parser.add_argument(
+        "-p",
+        "--previous",
+        action="store_true",
+        dest="previous",
+        help="Download Install Previous Version",
+    )
+    parser.add_argument(
+        "-v",
+        "--version",
+        dest="version",
+        help="Version to be installed",
+        default=None,
+    )
+    parser.add_argument(
+        "-a",
+        "--arch",
+        dest="architecture",
+        help="Architecture e.g. Mac_Arm, Linux_x64, default=Mac_Arm",
+        default="Mac_Arm",
+    )
+    parser.add_argument(
+        "-f",
+        "--file",
+        dest="file",
+        help="This must be supplied if architecture is other than Mac_Arm, as each platform has diff. name, default=chrome-mac.zip",
+        default="chrome-mac.zip",
+    )
+    args = parser.parse_args()
+
+    main(
+        previous=args.previous,
+        version=args.version,
+        architecture=args.architecture,
+        file=args.file,
+    )
